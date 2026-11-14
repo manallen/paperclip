@@ -4,8 +4,8 @@ import type { ProxyOptions } from "vite";
 // The `configure` hook forwards the client's original Host as
 // x-forwarded-host so the paperclip server's board mutation guard treats
 // the browser's Origin as trusted when the SPA is served from a different
-// port than the API (e.g. `pnpm dev:mobile` on :3101 → API on :3100).
-export function createApiProxy(target = "http://localhost:3100"): Record<string, ProxyOptions> {
+// port than the API (e.g. `pnpm dev:mobile` on :3101 → API on :3333).
+export function createApiProxy(target = "http://localhost:3333"): Record<string, ProxyOptions> {
   return {
     "/api": {
       target,

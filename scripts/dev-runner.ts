@@ -219,7 +219,7 @@ if (tailscaleAuth || bindMode) {
   console.log("[paperclip] dev mode: local_trusted (default)");
 }
 
-const serverPort = Number.parseInt(env.PORT ?? process.env.PORT ?? "3100", 10) || 3100;
+const serverPort = Number.parseInt(env.PORT ?? process.env.PORT ?? "3333", 10) || 3333;
 const devService = createDevServiceIdentity({
   mode,
   forwardedArgs: dataDir ? [...forwardedArgs, `--data-dir=${dataDir}`] : forwardedArgs,
