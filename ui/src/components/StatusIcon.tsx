@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "@/i18n";
 import type { IssueBlockerAttention } from "@paperclipai/shared";
 import { cn } from "../lib/utils";
 import { StatusGlyph, type StatusGlyphSize } from "./StatusGlyph";
@@ -36,6 +37,7 @@ export function getStatusIconLabel(status: string, externalConversationState?: "
  * still rides on the accessible label.
  */
 export function StatusIcon({ status, displayStatus: presentationStatus, externalConversationState, blockerAttention, onChange, className, glyphContainerClassName, showLabel, size = "md" }: StatusIconProps) {
+  useTranslation();
   const [open, setOpen] = useState(false);
   const presentation = { status, displayStatus: presentationStatus, externalConversationState, blockerAttention };
   const { glyphStatus, label, ariaLabel } = resolveTaskStatusPresentation(presentation);

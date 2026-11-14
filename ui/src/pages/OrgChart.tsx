@@ -10,6 +10,7 @@ import { AgentAvatar } from "@/components/AgentAvatar";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, useMemo, useCallback, useId, useImperativeHandle, type Ref } from "react";
 import { Link, useNavigate, useLocation } from "@/lib/router";
+import { useTranslation } from "@/i18n";
 import { useQuery } from "@tanstack/react-query";
 import { heartbeatsApi } from "../api/heartbeats";
 import { issuesApi } from "../api/issues";
@@ -135,6 +136,7 @@ export interface OrgChartProps {
 export function OrgChart({ orgTree: providedOrgTree, agents: providedAgents, matchingAgentIds, embedded = false, controlsContainer, actionsRef, enableTaskLayer = false }: OrgChartProps = {}) {
   const { selectedCompanyId } = useCompany();
   const { setBreadcrumbs } = useBreadcrumbs();
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const simulateTasks = import.meta.env.DEV && new URLSearchParams(location.search).get("orgTasks") === "demo";
@@ -480,7 +482,7 @@ export function OrgChart({ orgTree: providedOrgTree, agents: providedAgents, mat
   }, [tasks, taskStartX, taskWidth, taskGap, taskScroll, viewport.width, nodesById]);
 
   if (!selectedCompanyId) {
-    return <EmptyState icon={Network} message="Select an organization to view the org chart." />;
+    return <EmptyState icon={Network} message={t("pages.orgChart.selectCompany", { defaultValue: "Select an organization to view the org chart." })} />;
   }
 
   // Keep a loaded chart on screen through a failed refetch; only a real
@@ -502,7 +504,7 @@ export function OrgChart({ orgTree: providedOrgTree, agents: providedAgents, mat
   }
 
   if (orgTree && orgTree.length === 0) {
-    return <EmptyState icon={Network} message="No organizational hierarchy defined." />;
+    return <EmptyState icon={Network} message={t("pages.agents.noOrg")} />;
   }
 
   return (

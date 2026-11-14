@@ -1,6 +1,7 @@
 import type { AiConnectionLoginIntent } from "@paperclipai/shared";
 import { cancelAdapterLoginSession, cancelPendingAdapterLogin, matchesAdapterLoginTarget } from "./useAdapterLoginCancellation";
 import { useQueryView } from "@/components/QueryView";
+import { LocaleSwitcher } from "./LocaleSwitcher";
 import type { AgentRunner, AgentRunnerChoice } from "@paperclipai/shared";
 import { needsClaudeSetupQualification, qualifyClaudeSetup } from "../lib/qualify-claude-setup";
 import { runOnboardingConnectionTest } from "../lib/onboarding-connection-test";
@@ -2828,6 +2829,9 @@ function OnboardingWizardInner({
           className="fixed inset-0 z-50 flex"
           onKeyDown={handleKeyDown}
         >
+          <div className="absolute top-4 right-4 z-10">
+            <LocaleSwitcher compact />
+          </div>
           {/* Form column — the wizard opens directly on step 1, so there is no
               front-door choice ahead of it, and it fills the width on every
               step (the mission step's half-width split is gone). */}

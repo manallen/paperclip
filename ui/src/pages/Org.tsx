@@ -12,6 +12,7 @@ import { QueryErrorState, useQueryView } from "../components/QueryView";
 import { ChevronRight, GitBranch } from "lucide-react";
 import { cn } from "../lib/utils";
 import { agentStatusDot, agentStatusDotDefault } from "../lib/status-colors";
+import { useTranslation } from "@/i18n";
 
 function OrgTree({
   nodes,
@@ -88,10 +89,11 @@ function OrgTreeNode({
 export function Org() {
   const { selectedCompanyId } = useCompany();
   const { setBreadcrumbs } = useBreadcrumbs();
+  const { t } = useTranslation();
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Org Chart" }]);
-  }, [setBreadcrumbs]);
+    setBreadcrumbs([{ label: t("pages.org.title", { defaultValue: "Org Chart" }) }]);
+  }, [setBreadcrumbs, t]);
 
   const orgQuery = useQuery({
     queryKey: queryKeys.org(selectedCompanyId!),
@@ -102,7 +104,7 @@ export function Org() {
   const orgView = useQueryView(orgQuery);
 
   if (!selectedCompanyId) {
-    return <EmptyState icon={GitBranch} message="Select an organization to view org chart." />;
+    return <EmptyState icon={GitBranch} message={t("pages.org.selectCompany", { defaultValue: "Select an organization to view org chart." })} />;
   }
 
   // Keep a loaded chart on screen through a failed refetch; only a real
@@ -127,7 +129,7 @@ export function Org() {
       {data && data.length === 0 && (
         <EmptyState
           icon={GitBranch}
-          message="No agents in the organization. Create agents to build your org chart."
+          message={t("pages.org.noAgents", { defaultValue: "No agents in the organization. Create agents to build your org chart." })}
         />
       )}
 

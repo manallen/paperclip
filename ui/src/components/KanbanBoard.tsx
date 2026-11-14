@@ -1,4 +1,5 @@
 import { AgentIdentity } from "@/components/AgentIdentity";
+import { entityStatusLabel as statusLabel } from "@/lib/entity-labels";
 import { useMemo, useState } from "react";
 import { Link } from "@/lib/router";
 import {
@@ -131,10 +132,6 @@ export const kanbanColumnTones: Partial<Record<IssueDisplayStatus, typeof defaul
 
 export function getKanbanColumnTone(status: IssueDisplayStatus) {
   return kanbanColumnTones[status === "monitoring" ? "in_progress" : status] ?? defaultKanbanColumnTone;
-}
-
-function statusLabel(status: string): string {
-  return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
 export function resolveKanbanTargetStatus(overId: string, issues: Issue[]): IssueStatus | null {

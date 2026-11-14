@@ -30,6 +30,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToastActions } from "@/context/ToastContext";
 import { cn } from "@/lib/utils";
+import { translateUiLiteral } from "@/i18n/LegacyLiteralLocalizer";
 
 function firstNonEmptyLine(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -323,7 +324,7 @@ export function PluginManager() {
                           <Badge variant="secondary">Not installed</Badge>
                         )}
                       </div>
-                      <p className="mt-1 text-sm text-muted-foreground">{bundledPlugin.description}</p>
+                      <p className="mt-1 text-sm text-muted-foreground">{translateUiLiteral(bundledPlugin.description)}</p>
                       <p className="mt-1 text-xs text-muted-foreground">{bundledPlugin.packageName}</p>
                       {installPending && !bundledPlugin.hasBuiltEntrypoints && (
                         <p className="mt-2 text-xs text-muted-foreground">Building plugin...</p>
@@ -423,7 +424,7 @@ export function PluginManager() {
                       </p>
                     </div>
                     <p className="text-sm text-muted-foreground truncate mt-0.5" title={plugin.manifestJson.description}>
-                      {plugin.manifestJson.description || "No description provided."}
+                      {plugin.manifestJson.description || translateUiLiteral("No description provided.")}
                     </p>
                     {plugin.status === "error" && (
                       <div className="mt-3 rounded-md border border-red-500/25 bg-red-500/[0.06] px-3 py-2">

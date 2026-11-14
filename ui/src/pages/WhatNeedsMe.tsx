@@ -58,6 +58,8 @@ import { DecisionQueueRail } from "../components/DecisionQueueRail";
 import { DecisionDateChips, type AttentionCustomRange } from "../components/DecisionDateChips";
 import { DecisionResolver } from "../components/DecisionResolver";
 import { IssueGroupHeader } from "../components/IssueGroupHeader";
+import { useTranslation } from "@/i18n";
+import { translateUiLiteral } from "@/i18n/LegacyLiteralLocalizer";
 
 // Incremental rendering (PAP-13784, same pattern as IssuesList): the feed is
 // uncapped, so mounting every row up front makes the page slow to paint and
@@ -98,6 +100,7 @@ export function WhatNeedsMe() {
 }
 
 function ClassicWhatNeedsMe() {
+  const { t } = useTranslation();
   const { selectedCompanyId } = useCompany();
   // The signed-in person; it keys every list so an account switch never shows
   // the previous person's cards (PAP-749 plan §1).
@@ -171,8 +174,8 @@ function ClassicWhatNeedsMe() {
   );
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Decisions" }]);
-  }, [setBreadcrumbs]);
+    setBreadcrumbs([{ label: t("nav.decisions") }]);
+  }, [setBreadcrumbs, t]);
 
   // Re-hydrate per-company preferences when the company changes.
   useEffect(() => {
@@ -575,7 +578,7 @@ function ClassicWhatNeedsMe() {
   }, [handleDismiss, keyboardItems, navigate, selectedAttentionId]);
 
   if (!selectedCompanyId) {
-    return <p className="text-sm text-muted-foreground">Select an organization first.</p>;
+    return <p className="text-sm text-muted-foreground">{t("pages.tasks.selectCompanyFirst", { defaultValue: "Select an organization first." })}</p>;
   }
 
   // Keep a loaded feed on screen through a failed refetch; only a real
@@ -808,13 +811,16 @@ function ClassicWhatNeedsMe() {
 
           {agingItems.length > 0 && (
             <Curtain
-              label="Aging"
+              label={t("pages.tasks.aging", { defaultValue: "Aging" })}
               count={agingItems.length}
               open={agingOpen}
               onToggle={() => setAgingOpen((prev) => !prev)}
             >
               <p className="text-xs text-muted-foreground">
-                Idle past {ATTENTION_AGING_DAYS} days — kept off the desk. Keep any you still want surfaced.
+                {t("pages.tasks.agingDescription", {
+                  defaultValue: "Idle past {{days}} days — kept off the desk. Keep any you still want surfaced.",
+                  days: ATTENTION_AGING_DAYS,
+                })}
               </p>
               {agingItems.map((item) => (
                 <AgingItemRow
@@ -840,13 +846,13 @@ function ClassicWhatNeedsMe() {
 
       <div className="space-y-4">
         <Curtain
-          label="Decided"
+          label={t("pages.tasks.decided", { defaultValue: "Decided" })}
           count={decisionHistoryCount(decidedDecisions?.length)}
           open={decidedOpen}
           onToggle={() => setDecidedOpen((prev) => !prev)}
         >
           {decidedDecisionsLoading ? (
-            <p className="text-xs text-muted-foreground">Loading decided decisions…</p>
+            <p className="text-xs text-muted-foreground">{t("pages.tasks.loadingDecided", { defaultValue: "Loading decided decisions…" })}</p>
           ) : (decidedDecisions?.length ?? 0) > 0 ? (
             decidedDecisions!.slice(0, DECISION_HISTORY_VISIBLE_LIMIT).map((decision) => (
               <DecisionResolver
@@ -858,18 +864,18 @@ function ClassicWhatNeedsMe() {
               />
             ))
           ) : (
-            <p className="text-xs text-muted-foreground">No decided decisions.</p>
+            <p className="text-xs text-muted-foreground">{t("pages.tasks.noDecided", { defaultValue: "No decided decisions." })}</p>
           )}
         </Curtain>
 
         <Curtain
-          label="Expired"
+          label={t("pages.tasks.expired", { defaultValue: "Expired" })}
           count={decisionHistoryCount(expiredDecisions?.length)}
           open={expiredOpen}
           onToggle={() => setExpiredOpen((prev) => !prev)}
         >
           {expiredDecisionsLoading ? (
-            <p className="text-xs text-muted-foreground">Loading expired decisions…</p>
+            <p className="text-xs text-muted-foreground">{t("pages.tasks.loadingExpired", { defaultValue: "Loading expired decisions…" })}</p>
           ) : (expiredDecisions?.length ?? 0) > 0 ? (
             expiredDecisions!.slice(0, DECISION_HISTORY_VISIBLE_LIMIT).map((decision) => (
               <DecisionResolver
@@ -881,7 +887,7 @@ function ClassicWhatNeedsMe() {
               />
             ))
           ) : (
-            <p className="text-xs text-muted-foreground">No expired decisions.</p>
+            <p className="text-xs text-muted-foreground">{t("pages.tasks.noExpired", { defaultValue: "No expired decisions." })}</p>
           )}
         </Curtain>
       </div>
@@ -905,15 +911,23 @@ export function DecisionBundleHeader({
   originIssue: AttentionSubject | null;
   count: number;
 }) {
-  const noun = count === 1 ? "decision" : "decisions";
+  const { t } = useTranslation();
+  const noun = count === 1
+    ? t("pages.tasks.decisionSingular", { defaultValue: "decision" })
+    : t("pages.tasks.decisionPlural", { defaultValue: "decisions" });
   return (
     <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 rounded-sm border-l-2 border-violet-500/60 bg-violet-500/5 px-3 py-1.5 text-xs">
       <span className="font-semibold text-violet-800 dark:text-violet-200">
-        {agentName ?? "An agent"} proposed {count} {noun}
+        {t("pages.tasks.bundleProposed", {
+          defaultValue: "{{agentName}} proposed {{count}} {{noun}}",
+          agentName: agentName ?? t("pages.tasks.anAgent", { defaultValue: "An agent" }),
+          count,
+          noun,
+        })}
       </span>
       {originIssue && (originIssue.identifier || originIssue.title) && (
         <span className="text-muted-foreground">
-          {"· from "}
+          {t("pages.tasks.bundleFrom", { defaultValue: "· from " })}
           {originIssue.href ? (
             <a href={originIssue.href} className="hover:underline">
               {originIssue.identifier ?? originIssue.title}
@@ -924,7 +938,7 @@ export function DecisionBundleHeader({
         </span>
       )}
       {title && <span className="text-muted-foreground">· {title}</span>}
-      <span className="text-muted-foreground">· {count} pending</span>
+      <span className="text-muted-foreground">{t("pages.tasks.bundlePending", { defaultValue: "· {{count}} pending", count })}</span>
     </div>
   );
 }
@@ -943,7 +957,7 @@ function CaughtUpNote({ filtered, view, snoozedBelow = false }: { filtered: bool
       <p className="text-sm font-medium text-foreground">
         {filtered
           ? "No decisions match your search or filters."
-          : snoozedBelow ? "No archived cards. Snoozed cards are below." : CAUGHT_UP_TEXT[view]}
+          : snoozedBelow ? "No archived cards. Snoozed cards are below." : translateUiLiteral(CAUGHT_UP_TEXT[view])}
       </p>
       {filtered && (
         <p className="mt-1 text-xs text-muted-foreground">Adjust or clear your search and filters to see the rest.</p>
@@ -966,10 +980,10 @@ function ZeroState({ view }: { view: AttentionPersonalView }) {
       <div className="mb-4 rounded-full bg-green-500/10 p-4">
         <CheckCircle2 className="h-10 w-10 text-green-500" />
       </div>
-      <p className="text-lg font-semibold text-foreground">{view === "mine" ? "You're all caught up" : CAUGHT_UP_TEXT[view]}</p>
+      <p className="text-lg font-semibold text-foreground">{view === "mine" ? "You're all caught up" : translateUiLiteral(CAUGHT_UP_TEXT[view])}</p>
       <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
         <Inbox className="h-4 w-4" />
-        {ZERO_STATE_DETAIL[view]}
+        {translateUiLiteral(ZERO_STATE_DETAIL[view])}
       </p>
     </div>
   );

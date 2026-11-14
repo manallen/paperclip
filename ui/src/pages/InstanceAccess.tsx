@@ -10,8 +10,10 @@ import { Card } from "@/components/ui/card";
 import { companyDirectoryQueryOptions, useAccountIdentity } from "@/api/companies-query";
 import { useToast } from "@/context/ToastContext";
 import { queryKeys } from "@/lib/queryKeys";
+import { useTranslation } from "@/i18n";
 
 export function InstanceAccess() {
+  const { t } = useTranslation();
   const { userId: accountUserId, settled: accountSettled } = useAccountIdentity();
   const { setBreadcrumbs } = useBreadcrumbs();
   const { pushToast } = useToast();
@@ -22,11 +24,11 @@ export function InstanceAccess() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Settings", href: "/company/settings" },
-      { label: "Instance settings", href: "/company/settings/instance/general" },
-      { label: "Access" },
+      { label: t("pages.instanceAccess.breadcrumbSettings", { defaultValue: "Settings" }), href: "/company/settings" },
+      { label: t("pages.instanceAccess.breadcrumbInstanceSettings", { defaultValue: "Instance settings" }), href: "/company/settings/instance/general" },
+      { label: t("pages.instanceAccess.breadcrumbAccess", { defaultValue: "Access" }) },
     ]);
-  }, [setBreadcrumbs]);
+  }, [setBreadcrumbs, t]);
 
   const usersQuery = useQuery({
     queryKey: queryKeys.access.adminUsers(search),
@@ -91,7 +93,7 @@ export function InstanceAccess() {
       if (selectedUserId) {
         await queryClient.invalidateQueries({ queryKey: queryKeys.access.userCompanyAccess(selectedUserId) });
       }
-      pushToast({ title: "Instance role updated", tone: "success" });
+      pushToast({ title: t("pages.instanceAccess.instanceRoleUpdated", { defaultValue: "Instance role updated" }), tone: "success" });
     },
   });
 
@@ -106,7 +108,7 @@ export function InstanceAccess() {
 
   if (usersView.kind === "error") {
     if (usersView.errorKind === "forbidden") {
-      return <div className="text-sm text-destructive">Instance admin access is required to manage users.</div>;
+      return <div className="text-sm text-destructive">{t("pages.instanceAccess.instanceAdminRequired", { defaultValue: "Instance admin access is required to manage users." })}</div>;
     }
     return (
       <QueryErrorState
@@ -136,22 +138,22 @@ export function InstanceAccess() {
       <div className="space-y-3">
         <div className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-muted-foreground" />
-          <h1 className="text-lg font-semibold">Instance Access</h1>
+          <h1 className="text-lg font-semibold">{t("pages.instanceAccess.pageTitle", { defaultValue: "Instance Access" })}</h1>
         </div>
         <p className="max-w-3xl text-sm text-muted-foreground">
-          Search users, manage instance-admin status, and control which organizations they can access.
+          {t("pages.instanceAccess.description", { defaultValue: "Search users, manage instance-admin status, and control which organizations they can access." })}
         </p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-(--gtc-34)">
         <Card className="block space-y-4 p-4">
           <label className="block space-y-2 text-sm">
-            <span className="font-medium">Search users</span>
+            <span className="font-medium">{t("pages.instanceAccess.searchUsers", { defaultValue: "Search users" })}</span>
             <input
               className="w-full rounded-md border border-border bg-background px-3 py-2"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search by name or email"
+              placeholder={t("pages.instanceAccess.searchPlaceholder", { defaultValue: "Search by name or email" })}
             />
           </label>
           <div className="space-y-2">
@@ -176,7 +178,7 @@ export function InstanceAccess() {
                   ) : null}
                 </div>
                 <div className="mt-2 text-xs text-muted-foreground">
-                  {user.activeCompanyMembershipCount} active organization memberships
+                  {user.activeCompanyMembershipCount} {t("pages.instanceAccess.activeCompanyMemberships", { defaultValue: "active organization memberships" })}
                 </div>
               </button>
             ))}
@@ -185,9 +187,9 @@ export function InstanceAccess() {
 
         <Card className="block space-y-4 p-5">
           {!selectedUserId ? (
-            <div className="text-sm text-muted-foreground">Select a user to inspect instance access.</div>
+            <div className="text-sm text-muted-foreground">{t("pages.instanceAccess.selectUserPrompt", { defaultValue: "Select a user to inspect instance access." })}</div>
           ) : userAccessQuery.isLoading || userAccessView.kind === "reconnecting" ? (
-            <div className="text-sm text-muted-foreground">Loading user access…</div>
+            <div className="text-sm text-muted-foreground">{t("pages.instanceAccess.loadingUserAccess", { defaultValue: "Loading user access…" })}</div>
           ) : userAccessView.kind === "error" ? (
             <QueryErrorState
               error={userAccessQuery.error}
@@ -211,15 +213,15 @@ export function InstanceAccess() {
                   onClick={() => setAdminMutation.mutate(!(selectedUser?.isInstanceAdmin ?? false))}
                   disabled={setAdminMutation.isPending}
                 >
-                  {selectedUser?.isInstanceAdmin ? "Remove instance admin" : "Promote to instance admin"}
+                  {selectedUser?.isInstanceAdmin ? t("pages.instanceAccess.removeInstanceAdmin", { defaultValue: "Remove instance admin" }) : t("pages.instanceAccess.promoteToInstanceAdmin", { defaultValue: "Promote to instance admin" })}
                 </Button>
               </div>
 
               <div className="space-y-3">
                 <div>
-                  <h2 className="text-sm font-semibold">Organization access</h2>
+                  <h2 className="text-sm font-semibold">{t("pages.instanceAccess.companyAccess", { defaultValue: "Organization access" })}</h2>
                   <p className="text-sm text-muted-foreground">
-                    Toggle organization membership for this user. New access defaults to an active operator membership.
+                    {t("pages.instanceAccess.companyAccessDescription", { defaultValue: "Toggle organization membership for this user. New access defaults to an active operator membership." })}
                   </p>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
@@ -251,13 +253,13 @@ export function InstanceAccess() {
                     onClick={() => updateCompanyAccessMutation.mutate()}
                     disabled={updateCompanyAccessMutation.isPending}
                   >
-                    {updateCompanyAccessMutation.isPending ? "Saving…" : "Save organization access"}
+                    {updateCompanyAccessMutation.isPending ? t("pages.instanceAccess.saving", { defaultValue: "Saving…" }) : t("pages.instanceAccess.saveCompanyAccess", { defaultValue: "Save organization access" })}
                   </Button>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <h2 className="text-sm font-semibold">Current memberships</h2>
+                <h2 className="text-sm font-semibold">{t("pages.instanceAccess.currentMemberships", { defaultValue: "Current memberships" })}</h2>
                 <div className="space-y-2">
                   {(userAccessQuery.data?.companyAccess ?? []).map((membership) => (
                     <div
@@ -267,7 +269,7 @@ export function InstanceAccess() {
                       <div>
                         <div className="font-medium">{membership.companyName || membership.companyId}</div>
                         <div className="text-muted-foreground">
-                          {membership.membershipRole || "unset"} • {membership.status}
+                          {membership.membershipRole || t("pages.instanceAccess.unset", { defaultValue: "unset" })} • {membership.status}
                         </div>
                       </div>
                       <div className="text-xs text-muted-foreground">

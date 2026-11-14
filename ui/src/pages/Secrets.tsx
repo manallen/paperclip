@@ -116,6 +116,8 @@ import { cn } from "../lib/utils";
 import { copyTextToClipboard } from "../lib/clipboard";
 import { useCopyAction } from "../lib/use-copy-action";
 import { PageTabBar } from "../components/PageTabBar";
+import { useTranslation } from "@/i18n";
+import { translateUiLiteral } from "@/i18n/LegacyLiteralLocalizer";
 import { AgentMultiSelect, AgentSelect } from "../components/AgentMultiSelect";
 import { AgentAvatar } from "../components/AgentAvatar";
 import { RadioCardGroup } from "@/components/ui/radio-card";
@@ -724,6 +726,7 @@ export function getAwsManagedPathPreview(input: {
 }
 
 export function Secrets() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { selectedCompanyId } = useCompany();
   const { setBreadcrumbs } = useBreadcrumbs();
@@ -810,8 +813,8 @@ export function Secrets() {
   const [newFolderError, setNewFolderError] = useState<string | null>(null);
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Secrets" }]);
-  }, [setBreadcrumbs]);
+    setBreadcrumbs([{ label: translateUiLiteral("Secrets") }]);
+  }, [setBreadcrumbs, t]);
 
   const secretsQuery = useQuery({
     queryKey: selectedCompanyId
@@ -2244,9 +2247,9 @@ export function Secrets() {
       >
         <PageTabBar
           items={[
-            { value: "secrets", label: "Secrets" },
-            { value: "my-secrets", label: "My secrets" },
-            ...(hideVaultsTab ? [] : [{ value: "vaults", label: "Vaults" }]),
+            { value: "secrets", label: translateUiLiteral("Secrets") },
+            { value: "my-secrets", label: translateUiLiteral("My secrets") },
+            ...(hideVaultsTab ? [] : [{ value: "vaults", label: translateUiLiteral("Vaults") }]),
             ...(hideProposalsTab
               ? []
               : [
@@ -2359,9 +2362,9 @@ export function Secrets() {
               !(showFolderView && folderPath) ? (
               <EmptyState
                 icon={KeyRound}
-                title="No secrets yet"
-                message="Add an API key or token once, then choose which agents can use it."
-                action="New secret"
+                title={translateUiLiteral("No secrets yet")}
+                message={translateUiLiteral("Add an API key or token once, then choose which agents can use it.")}
+                action={translateUiLiteral("New secret")}
                 onAction={openCreateSecret}
               />
             ) : (
@@ -2389,7 +2392,7 @@ export function Secrets() {
                     <EmptyState
                       icon={FolderOpen}
                       message="No secrets in this folder yet."
-                      action="New secret here"
+                      action={translateUiLiteral("New secret here")}
                       onAction={openCreateSecret}
                     />
                   ) : showManagedSection ? (
@@ -2915,14 +2918,14 @@ export function Secrets() {
                   options={[
                     {
                       value: "company",
-                      title: "Organization",
-                      description: "One value, shared by every agent you choose.",
+                      title: translateUiLiteral("Organization"),
+                      description: translateUiLiteral("One value, shared by every agent you choose."),
                       icon: <Building2 className="h-4 w-4" />,
                     },
                     {
                       value: "user",
-                      title: "Each user",
-                      description: "Every member adds their own under My secrets.",
+                      title: translateUiLiteral("Each user"),
+                      description: translateUiLiteral("Every member adds their own under My secrets."),
                       icon: <Users className="h-4 w-4" />,
                     },
                   ]}
@@ -3658,9 +3661,9 @@ function SecretsFiltersPopover({
           value={providedByFilter}
           onChange={onProvidedByChange}
           options={[
-            { value: "all", label: "Anyone" },
-            { value: "company", label: "Organization" },
-            { value: "user", label: "Each user" },
+            { value: "all", label: translateUiLiteral("Anyone") },
+            { value: "company", label: translateUiLiteral("Organization") },
+            { value: "user", label: translateUiLiteral("Each user") },
           ]}
         />
         {providers.length > 1 ? (
@@ -3669,7 +3672,7 @@ function SecretsFiltersPopover({
             value={providerFilter}
             onChange={onProviderChange}
             options={[
-              { value: "all", label: "Any vault" },
+              { value: "all", label: translateUiLiteral("Any vault") },
               ...providers.map((provider) => ({
                 value: provider.id,
                 label: provider.id === "local_encrypted" ? "Paperclip" : provider.label,
@@ -3682,9 +3685,9 @@ function SecretsFiltersPopover({
           value={statusFilter}
           onChange={onStatusChange}
           options={[
-            { value: "current", label: "Active and disabled" },
-            { value: "disabled", label: "Disabled only" },
-            { value: "archived", label: "Archived" },
+            { value: "current", label: translateUiLiteral("Active and disabled") },
+            { value: "disabled", label: translateUiLiteral("Disabled only") },
+            { value: "archived", label: translateUiLiteral("Archived") },
           ]}
         />
       </PopoverContent>
@@ -4942,7 +4945,7 @@ export function SecretEventsTab({
         {visible.map((event) => (
           <li key={event.id} className="flex items-baseline justify-between gap-3 py-1.5 text-sm">
             <span className={cn("min-w-0", event.outcome !== "success" && event.outcome !== "optional_omitted" && "text-destructive")}>
-              {actorLabel(event)} {ACCESS_OUTCOME_TEXT[event.outcome] ?? event.outcome}
+              {actorLabel(event)} {ACCESS_OUTCOME_TEXT[event.outcome] ? translateUiLiteral(ACCESS_OUTCOME_TEXT[event.outcome]) : event.outcome}
               {event.responsibleUserId ? (
                 <span className="text-muted-foreground"> · for {userLabel(event.responsibleUserId)}</span>
               ) : null}

@@ -105,6 +105,7 @@ import { cn } from "../lib/utils";
 import { StatusBadge } from "../components/StatusBadge";
 import { approvalLabel, defaultTypeIcon, typeIcon } from "../components/ApprovalPayload";
 import { timeAgo } from "../lib/timeAgo";
+import { t, useTranslation } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -309,11 +310,13 @@ function firstNonEmptyLine(value: string | null | undefined): string | null {
 }
 
 function runFailureMessage(run: HeartbeatRun): string {
-  return firstNonEmptyLine(run.error) ?? firstNonEmptyLine(run.stderrExcerpt) ?? "Run exited with an error.";
+  return firstNonEmptyLine(run.error)
+    ?? firstNonEmptyLine(run.stderrExcerpt)
+    ?? t("pages.inbox.runExitedWithError", { defaultValue: "Run exited with an error." });
 }
 
 function approvalStatusLabel(status: Approval["status"]): string {
-  return status.replaceAll("_", " ");
+  return t(`status.${status}`);
 }
 
 function readIssueIdFromRun(run: HeartbeatRun): string | null {
@@ -347,7 +350,10 @@ export function formatJoinRequestInboxLabel(
   },
 ) {
   if (joinRequest.requestType !== "human") {
-    return `Agent join request${joinRequest.agentName ? `: ${joinRequest.agentName}` : ""}`;
+    return t("pages.inbox.agentJoinRequest", {
+      defaultValue: "Agent join request{{name}}",
+      name: joinRequest.agentName ? `: ${joinRequest.agentName}` : "",
+    });
   }
 
   const requesterName = nonEmptyLabel(joinRequest.requesterUser?.name);
@@ -360,7 +366,7 @@ export function formatJoinRequestInboxLabel(
   if (requesterEmail) return requesterEmail;
   if (requesterName) return requesterName;
   if (requesterId) return requesterId;
-  return "Human join request";
+  return t("pages.inbox.humanJoinRequest", { defaultValue: "Human join request" });
 }
 
 
@@ -401,6 +407,7 @@ export function FailedRunInboxRow({
   selected?: boolean;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const issueId = readIssueIdFromRun(run);
   const issue = issueId ? issueById.get(issueId) ?? null : null;
   const interruption = issue?.interruption;
@@ -438,7 +445,7 @@ export function FailedRunInboxRow({
                   "inline-flex h-4 w-4 items-center justify-center rounded-full transition-colors",
                   "hover:bg-blue-500/20",
                 )}
-                aria-label="Mark as read"
+                aria-label={t("pages.inbox.markAsRead", { defaultValue: "Mark as read" })}
               >
                 <span className={cn(
                   "block h-2 w-2 rounded-full transition-opacity duration-300",
@@ -473,7 +480,10 @@ export function FailedRunInboxRow({
                   {issue.title}
                 </>
               ) : (
-                <>Failed run{linkedAgentName ? ` — ${linkedAgentName}` : ""}</>
+                <>{t("pages.inbox.failedRun", {
+                  defaultValue: "Failed run{{name}}",
+                  name: linkedAgentName ? ` — ${linkedAgentName}` : "",
+                })}</>
               )}
             </span>
             <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
@@ -504,7 +514,7 @@ export function FailedRunInboxRow({
               type="button"
               onClick={onDismiss}
               className="rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground group-hover:opacity-100"
-              aria-label="Dismiss"
+              aria-label={t("pages.inbox.dismiss", { defaultValue: "Dismiss" })}
             >
               <X className="h-4 w-4" />
             </button>
@@ -528,7 +538,7 @@ export function FailedRunInboxRow({
             type="button"
             onClick={onDismiss}
             className="rounded-md p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
-            aria-label="Dismiss"
+            aria-label={t("pages.inbox.dismiss", { defaultValue: "Dismiss" })}
           >
             <X className="h-4 w-4" />
           </button>
@@ -563,6 +573,7 @@ function ApprovalInboxRow({
   selected?: boolean;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const Icon = typeIcon[approval.type] ?? defaultTypeIcon;
   const label = approvalLabel(approval.type, approval.payload as Record<string, unknown> | null);
   const showResolutionButtons =
@@ -587,7 +598,7 @@ function ApprovalInboxRow({
                   "inline-flex h-4 w-4 items-center justify-center rounded-full transition-colors",
                   "hover:bg-blue-500/20",
                 )}
-                aria-label="Mark as read"
+                aria-label={t("pages.inbox.markAsRead", { defaultValue: "Mark as read" })}
               >
                 <span className={cn(
                   "block h-2 w-2 rounded-full transition-opacity duration-300",
@@ -618,8 +629,8 @@ function ApprovalInboxRow({
             </span>
             <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
               <span className="capitalize">{approvalStatusLabel(approval.status)}</span>
-              {requesterName ? <span>requested by {requesterName}</span> : null}
-              <span>updated {timeAgo(approval.updatedAt)}</span>
+              {requesterName ? <span>{t("pages.inbox.requestedBy", { defaultValue: "requested by {{name}}", name: requesterName })}</span> : null}
+              <span>{t("pages.inbox.updated", { defaultValue: "updated {{time}}", time: timeAgo(approval.updatedAt) })}</span>
             </span>
           </span>
         </Link>
@@ -660,7 +671,7 @@ function ApprovalInboxRow({
             onClick={onApprove}
             disabled={isPending}
           >
-            Approve
+            {t("pages.inbox.approve", { defaultValue: "Approve" })}
           </Button>
           <Button
             variant="destructive"
@@ -669,7 +680,7 @@ function ApprovalInboxRow({
             onClick={onReject}
             disabled={isPending}
           >
-            Reject
+            {t("pages.inbox.reject", { defaultValue: "Reject" })}
           </Button>
         </div>
       ) : null}
@@ -700,6 +711,7 @@ function JoinRequestInboxRow({
   selected?: boolean;
   className?: string;
 }) {
+  const { t } = useTranslation();
   const label = formatJoinRequestInboxLabel(joinRequest);
   const showUnreadSlot = unreadState !== null;
   const showUnreadDot = unreadState === "visible" || unreadState === "fading";
@@ -720,7 +732,7 @@ function JoinRequestInboxRow({
                   "inline-flex h-4 w-4 items-center justify-center rounded-full transition-colors",
                   "hover:bg-blue-500/20",
                 )}
-                aria-label="Mark as read"
+                aria-label={t("pages.inbox.markAsRead", { defaultValue: "Mark as read" })}
               >
                 <span className={cn(
                   "block h-2 w-2 rounded-full transition-opacity duration-300",
@@ -744,8 +756,12 @@ function JoinRequestInboxRow({
               {label}
             </span>
             <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted-foreground">
-              <span>requested {timeAgo(joinRequest.createdAt)} from IP {joinRequest.requestIp}</span>
-              {joinRequest.adapterType && <span>adapter: {joinRequest.adapterType}</span>}
+              <span>{t("pages.inbox.requestedFromIp", {
+                defaultValue: "requested {{time}} from IP {{ip}}",
+                time: timeAgo(joinRequest.createdAt),
+                ip: joinRequest.requestIp,
+              })}</span>
+              {joinRequest.adapterType && <span>{t("pages.inbox.adapter", { defaultValue: "adapter: {{type}}", type: joinRequest.adapterType })}</span>}
             </span>
           </span>
         </div>
@@ -759,7 +775,7 @@ function JoinRequestInboxRow({
             onClick={onApprove}
             disabled={isPending}
           >
-            Approve
+            {t("pages.inbox.approve", { defaultValue: "Approve" })}
           </Button>
           <Button
             variant="destructive"
@@ -768,7 +784,7 @@ function JoinRequestInboxRow({
             onClick={onReject}
             disabled={isPending}
           >
-            Reject
+            {t("pages.inbox.reject", { defaultValue: "Reject" })}
           </Button>
         </div>
       </div>
@@ -779,7 +795,7 @@ function JoinRequestInboxRow({
           onClick={onApprove}
           disabled={isPending}
         >
-          Approve
+          {t("pages.inbox.approve", { defaultValue: "Approve" })}
         </Button>
         <Button
           variant="destructive"
@@ -788,7 +804,7 @@ function JoinRequestInboxRow({
           onClick={onReject}
           disabled={isPending}
         >
-          Reject
+          {t("pages.inbox.reject", { defaultValue: "Reject" })}
         </Button>
       </div>
     </div>
@@ -1371,7 +1387,9 @@ function StreamlinedInbox({
     if (currentUserId) {
       options.set(`user:${currentUserId}`, {
         id: `user:${currentUserId}`,
-        label: currentUserId === "local-board" ? "Board" : "Me",
+        label: currentUserId === "local-board"
+          ? t("pages.inbox.board", { defaultValue: "Board" })
+          : t("filter.me"),
         kind: "user",
         searchText: currentUserId === "local-board" ? "board me human local-board" : `me board human ${currentUserId}`,
       });
@@ -1423,7 +1441,7 @@ function StreamlinedInbox({
       if (a.kind !== b.kind) return a.kind === "user" ? -1 : 1;
       return a.label.localeCompare(b.label);
     });
-  }, [agents, currentUserId, mineIssues, touchedIssues]);
+  }, [agents, currentUserId, mineIssues, touchedIssues, t]);
   const issuesToRender = useMemo(
     () => {
       if (tab === "mine") return visibleMineIssues;
@@ -2813,7 +2831,7 @@ function StreamlinedInbox({
                     variant="outline"
                     size="icon"
                     className={cn("h-8 w-8 shrink-0", blockedGroupBy !== "none" && "bg-accent")}
-                    title="Group"
+                    title={t("pages.inbox.group", { defaultValue: "Group" })}
                   >
                     <Layers className="h-3.5 w-3.5" />
                   </Button>
@@ -2859,7 +2877,7 @@ function StreamlinedInbox({
                     variant="outline"
                     size="icon"
                     className="h-8 w-8 shrink-0"
-                    title="Sort"
+                    title={t("pages.inbox.sort", { defaultValue: "Sort" })}
                   >
                     <ArrowUpDown className="h-3.5 w-3.5" />
                   </Button>
@@ -2892,7 +2910,9 @@ function StreamlinedInbox({
                 size="icon"
                 className={cn("hidden h-8 w-8 shrink-0 sm:inline-flex", nestingEnabled && "bg-accent")}
                 onClick={toggleNesting}
-                title={nestingEnabled ? "Disable parent-child nesting" : "Enable parent-child nesting"}
+                title={nestingEnabled
+                  ? t("pages.inbox.disableNesting", { defaultValue: "Disable parent-child nesting" })
+                  : t("pages.inbox.enableNesting", { defaultValue: "Enable parent-child nesting" })}
               >
                 <ListTree className="h-3.5 w-3.5" />
               </Button>
@@ -2932,7 +2952,7 @@ function StreamlinedInbox({
                     variant="outline"
                     size="icon"
                     className={cn("h-8 w-8 shrink-0", groupBy !== "none" && "bg-accent")}
-                    title="Group"
+                    title={t("pages.inbox.group", { defaultValue: "Group" })}
                   >
                     <Layers className="h-3.5 w-3.5" />
                   </Button>
@@ -2940,11 +2960,11 @@ function StreamlinedInbox({
                 <PopoverContent align="end" className="w-40 p-2">
                   <div className="space-y-0.5">
                     {([
-                      ["none", "None"],
-                      ["type", "Type"],
-                      ["assignee", "Responsible"],
-                      ["project", "Project"],
-                      ...(isolatedWorkspacesEnabled ? ([["workspace", "Workspace"]] as const) : []),
+                      ["none", t("status.none")],
+                      ["type", t("pages.inbox.groupByType", { defaultValue: "Type" })],
+                      ["assignee", t("pages.inbox.groupByAssignee", { defaultValue: "Responsible" })],
+                      ["project", t("pages.inbox.groupByProject", { defaultValue: "Project" })],
+                      ...(isolatedWorkspacesEnabled ? ([["workspace", t("pages.inbox.groupByWorkspace", { defaultValue: "Workspace" })]] as const) : []),
                     ] as const).map(([value, label]) => (
                       <button
                         key={value}
@@ -2988,19 +3008,27 @@ function StreamlinedInbox({
                     onClick={() => setShowMarkAllReadConfirm(true)}
                     disabled={markAllReadMutation.isPending}
                   >
-                    {markAllReadMutation.isPending ? "Marking…" : "Mark all as read"}
+                    {markAllReadMutation.isPending
+                      ? t("pages.inbox.marking", { defaultValue: "Marking…" })
+                      : t("pages.inbox.markAllAsRead", { defaultValue: "Mark all as read" })}
                   </Button>
                   <Dialog open={showMarkAllReadConfirm} onOpenChange={setShowMarkAllReadConfirm}>
                     <DialogContent className="sm:max-w-md">
                       <DialogHeader>
-                        <DialogTitle>Mark all as read?</DialogTitle>
+                        <DialogTitle>{t("pages.inbox.markAllAsReadConfirm", { defaultValue: "Mark all as read?" })}</DialogTitle>
                         <DialogDescription>
-                          This will mark {unreadIssueIds.length} unread {unreadIssueIds.length === 1 ? "item" : "items"} as read.
+                          {t("pages.inbox.markAllAsReadDescription", {
+                            defaultValue: "This will mark {{count}} unread {{noun}} as read.",
+                            count: unreadIssueIds.length,
+                            noun: unreadIssueIds.length === 1
+                              ? t("pages.inbox.item", { defaultValue: "item" })
+                              : t("pages.inbox.items", { defaultValue: "items" }),
+                          })}
                         </DialogDescription>
                       </DialogHeader>
                       <DialogFooter>
                         <Button variant="outline" onClick={() => setShowMarkAllReadConfirm(false)}>
-                          Cancel
+                          {t("pages.inbox.cancel", { defaultValue: "Cancel" })}
                         </Button>
                         <Button
                           onClick={() => {
@@ -3008,7 +3036,7 @@ function StreamlinedInbox({
                             markAllReadMutation.mutate(unreadIssueIds);
                           }}
                         >
-                          Mark all as read
+                          {t("pages.inbox.markAllAsRead", { defaultValue: "Mark all as read" })}
                         </Button>
                       </DialogFooter>
                     </DialogContent>
@@ -3066,14 +3094,14 @@ function StreamlinedInbox({
           icon={searchQuery.trim() ? Search : InboxIcon}
           message={
             searchQuery.trim()
-              ? "No inbox items match your search."
+              ? t("pages.inbox.noSearchMatches", { defaultValue: "No inbox items match your search." })
               : tab === "mine"
-              ? "Inbox zero."
+              ? t("pages.inbox.inboxZero", { defaultValue: "Inbox zero." })
               : tab === "unread"
-              ? "No new inbox items."
+              ? t("pages.inbox.noNewItems", { defaultValue: "No new inbox items." })
               : tab === "recent"
-                ? "No recent inbox items."
-                : "No inbox items match these filters."
+                ? t("pages.inbox.noRecentItems", { defaultValue: "No recent inbox items." })
+                : t("pages.inbox.noFilterMatches", { defaultValue: "No inbox items match these filters." })
           }
         />
       )}
@@ -3217,7 +3245,13 @@ function StreamlinedInbox({
                       ) : undefined}
                       titleSuffix={hasChildren && !isExpanded ? (
                         <span className="ml-1.5 text-xs text-muted-foreground">
-                          ({childCount} sub-task{childCount !== 1 ? "s" : ""})
+                          {t("pages.inbox.subtaskCount", {
+                            defaultValue: "({{count}} {{noun}})",
+                            count: childCount,
+                            noun: childCount === 1
+                              ? t("pages.inbox.subtask", { defaultValue: "sub-task" })
+                              : t("pages.inbox.subtasks", { defaultValue: "sub-tasks" }),
+                          })}
                         </span>
                       ) : undefined}
                       mobileTitleMeta={streamlinedUiEnabled ? issueActivityTimestamp(issue) : undefined}
@@ -3297,7 +3331,9 @@ function StreamlinedInbox({
                       >
                         <div className="h-px flex-1 bg-border/80" />
                         <span className="shrink-0 text-(length:--text-micro) font-semibold uppercase tracking-wide text-muted-foreground">
-                          {group.searchSection === "archived" ? "Archived" : "Other results"}
+                          {group.searchSection === "archived"
+                            ? t("status.archived")
+                            : t("pages.inbox.otherResults", { defaultValue: "Other results" })}
                         </span>
                         <div className="h-px flex-1 bg-border/80" />
                       </div>,
@@ -3334,8 +3370,8 @@ function StreamlinedInbox({
                               variant="ghost"
                               size="icon-xs"
                               className="-mr-2 text-muted-foreground"
-                              title={`New task in ${group.label}`}
-                              aria-label={`New task in ${group.label}`}
+                              title={t("pages.inbox.newTaskIn", { defaultValue: "New task in {{group}}", group: group.label })}
+                              aria-label={t("pages.inbox.newTaskIn", { defaultValue: "New task in {{group}}", group: group.label })}
                               onClick={(event) => {
                                 event.stopPropagation();
                                 openCreateIssueForGroup(group);
@@ -3405,7 +3441,7 @@ function StreamlinedInbox({
                             className="shrink-0 text-(length:--text-micro) font-medium uppercase tracking-wider text-muted-foreground/70"
                             data-date-group-label=""
                           >
-                            Earlier
+                            {t("pages.inbox.earlier", { defaultValue: "Earlier" })}
                           </span>
                         </div>,
                       );
@@ -3620,7 +3656,7 @@ function StreamlinedInbox({
           {showSeparatorBefore("alerts") && <Separator />}
           <div>
             <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Alerts
+              {t("pages.inbox.alerts", { defaultValue: "Alerts" })}
             </h3>
             <div className="divide-y divide-border border border-border">
               {showAggregateAgentError && (
@@ -3632,14 +3668,16 @@ function StreamlinedInbox({
                     <AlertTriangle className="h-4 w-4 shrink-0 text-red-600 dark:text-red-400" />
                     <span className="text-sm">
                       <span className="font-medium">{dashboard!.agents.error}</span>{" "}
-                      {dashboard!.agents.error === 1 ? "agent has" : "agents have"} errors
+                      {dashboard!.agents.error === 1
+                        ? t("pages.inbox.agentHasErrors", { defaultValue: "agent has errors" })
+                        : t("pages.inbox.agentsHaveErrors", { defaultValue: "agents have errors" })}
                     </span>
                   </Link>
                   <button
                     type="button"
                     onClick={() => dismissAlert("alert:agent-errors")}
                     className="rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground group-hover/alert:opacity-100"
-                    aria-label="Dismiss"
+                    aria-label={t("pages.inbox.dismiss", { defaultValue: "Dismiss" })}
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -3653,16 +3691,16 @@ function StreamlinedInbox({
                   >
                     <AlertTriangle className="h-4 w-4 shrink-0 text-yellow-400" />
                     <span className="text-sm">
-                      Budget at{" "}
+                      {t("pages.inbox.budgetAt", { defaultValue: "Budget at" })}{" "}
                       <span className="font-medium">{dashboard!.costs.monthUtilizationPercent}%</span>{" "}
-                      utilization this month
+                      {t("pages.inbox.utilizationThisMonth", { defaultValue: "utilization this month" })}
                     </span>
                   </Link>
                   <button
                     type="button"
                     onClick={() => dismissAlert("alert:budget")}
                     className="rounded-md p-1 text-muted-foreground opacity-0 transition-opacity hover:bg-accent hover:text-foreground group-hover/alert:opacity-100"
-                    aria-label="Dismiss"
+                    aria-label={t("pages.inbox.dismiss", { defaultValue: "Dismiss" })}
                   >
                     <X className="h-3.5 w-3.5" />
                   </button>

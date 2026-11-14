@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useTranslation } from "@/i18n";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -136,6 +137,7 @@ export function IssueFiltersPopover({
   presentation?: "legacy" | "streamlined" | "refreshed";
   inboxScopeFilters?: InboxScopeFilters;
 }) {
+  const { t } = useTranslation();
   const streamlined = presentation === "streamlined";
   const refreshed = presentation === "refreshed";
   const [creatorSearch, setCreatorSearch] = useState("");
@@ -294,10 +296,11 @@ export function IssueFiltersPopover({
             <span className="text-xs text-muted-foreground">Quick filters</span>
             <div className="flex flex-wrap gap-1.5">
               {issueQuickFilterPresets.map((preset) => {
+                const label = t(preset.labelKey, { defaultValue: preset.defaultLabel });
                 const isActive = issueFilterArraysEqual(state.statuses, preset.statuses);
                 return (
                   <button
-                    key={preset.label}
+                    key={preset.labelKey}
                     type="button"
                     className={`rounded-full border px-2.5 py-1 text-xs transition-colors ${
                       isActive
@@ -306,7 +309,7 @@ export function IssueFiltersPopover({
                     }`}
                     onClick={() => onChange({ statuses: isActive ? [] : [...preset.statuses] })}
                   >
-                    {preset.label}
+                    {label}
                   </button>
                 );
               })}

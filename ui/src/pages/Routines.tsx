@@ -70,6 +70,7 @@ import {
   type FolderSelection,
 } from "../components/folders/FolderControls";
 import { useUpdateIssueMutation } from "../hooks/useUpdateIssueMutation";
+import { t, useTranslation } from "@/i18n";
 
 const concurrencyPolicies = ["coalesce_if_active", "always_enqueue", "skip_if_active"];
 const catchUpPolicies = ["skip_missed", "enqueue_missed_with_cap"];
@@ -81,6 +82,15 @@ const concurrencyPolicyDescriptions: Record<string, string> = {
 const catchUpPolicyDescriptions: Record<string, string> = {
   skip_missed: "Ignore windows that were missed while the scheduler or routine was paused.",
   enqueue_missed_with_cap: "Catch up missed schedule windows after recovery; sub-hourly schedules are combined into one catch-up run, slower schedules replay each missed window up to a cap.",
+};
+const concurrencyPolicyDescriptionKeys: Record<string, string> = {
+  coalesce_if_active: "pages.routines.concurrencyPolicyDescriptionCoalesceIfActive",
+  always_enqueue: "pages.routines.concurrencyPolicyDescriptionAlwaysEnqueue",
+  skip_if_active: "pages.routines.concurrencyPolicyDescriptionSkipIfActive",
+};
+const catchUpPolicyDescriptionKeys: Record<string, string> = {
+  skip_missed: "pages.routines.catchUpPolicyDescriptionSkipMissed",
+  enqueue_missed_with_cap: "pages.routines.catchUpPolicyDescriptionEnqueueMissedWithCap",
 };
 
 function autoResizeTextarea(element: HTMLTextAreaElement | null) {
@@ -186,8 +196,8 @@ export function buildRoutineGroups(
         const positionCompare = leftPosition - rightPosition;
         if (positionCompare !== 0) return positionCompare;
 
-        const labelCompare = (leftFolder?.name ?? "Unknown folder").localeCompare(
-          rightFolder?.name ?? "Unknown folder",
+        const labelCompare = (leftFolder?.name ?? t("pages.routines.unknownFolder", { defaultValue: "Unknown folder" })).localeCompare(
+          rightFolder?.name ?? t("pages.routines.unknownFolder", { defaultValue: "Unknown folder" }),
           undefined,
           { sensitivity: "base" },
         );
@@ -195,7 +205,7 @@ export function buildRoutineGroups(
       })
       .map((key) => ({
         key,
-        label: key === "__unfiled" ? "Unfiled" : (folderById.get(key)?.name ?? "Unknown folder"),
+        label: key === "__unfiled" ? t("pages.routines.unfiled", { defaultValue: "Unfiled" }) : (folderById.get(key)?.name ?? t("pages.routines.unknownFolder", { defaultValue: "Unknown folder" })),
         items: groups[key]!,
       }));
   }
@@ -204,13 +214,13 @@ export function buildRoutineGroups(
     const groups = groupBy(routines, (routine) => routine.projectId ?? "__no_project");
     return Object.keys(groups)
       .sort((left, right) => {
-        const leftLabel = left === "__no_project" ? "No project" : (projectById.get(left)?.name ?? "Unknown project");
-        const rightLabel = right === "__no_project" ? "No project" : (projectById.get(right)?.name ?? "Unknown project");
+        const leftLabel = left === "__no_project" ? t("pages.routines.noProject", { defaultValue: "No project" }) : (projectById.get(left)?.name ?? t("pages.routines.unknownProject", { defaultValue: "Unknown project" }));
+        const rightLabel = right === "__no_project" ? t("pages.routines.noProject", { defaultValue: "No project" }) : (projectById.get(right)?.name ?? t("pages.routines.unknownProject", { defaultValue: "Unknown project" }));
         return leftLabel.localeCompare(rightLabel);
       })
       .map((key) => ({
         key,
-        label: key === "__no_project" ? "No project" : (projectById.get(key)?.name ?? "Unknown project"),
+        label: key === "__no_project" ? t("pages.routines.noProject", { defaultValue: "No project" }) : (projectById.get(key)?.name ?? t("pages.routines.unknownProject", { defaultValue: "Unknown project" })),
         items: groups[key]!,
       }));
   }
@@ -218,13 +228,13 @@ export function buildRoutineGroups(
   const groups = groupBy(routines, (routine) => routine.assigneeAgentId ?? "__unassigned");
   return Object.keys(groups)
     .sort((left, right) => {
-      const leftLabel = left === "__unassigned" ? "Unassigned" : (agentById.get(left)?.name ?? "Unknown agent");
-      const rightLabel = right === "__unassigned" ? "Unassigned" : (agentById.get(right)?.name ?? "Unknown agent");
+      const leftLabel = left === "__unassigned" ? t("pages.routines.unassigned", { defaultValue: "Unassigned" }) : (agentById.get(left)?.name ?? t("pages.routines.unknownAgent", { defaultValue: "Unknown agent" }));
+      const rightLabel = right === "__unassigned" ? t("pages.routines.unassigned", { defaultValue: "Unassigned" }) : (agentById.get(right)?.name ?? t("pages.routines.unknownAgent", { defaultValue: "Unknown agent" }));
       return leftLabel.localeCompare(rightLabel);
     })
     .map((key) => ({
       key,
-      label: key === "__unassigned" ? "Unassigned" : (agentById.get(key)?.name ?? "Unknown agent"),
+      label: key === "__unassigned" ? t("pages.routines.unassigned", { defaultValue: "Unassigned" }) : (agentById.get(key)?.name ?? t("pages.routines.unknownAgent", { defaultValue: "Unknown agent" })),
       items: groups[key]!,
     }));
 }
@@ -246,7 +256,7 @@ export function buildRoutineSections(
     .filter((group) => group.items.length > 0)
     .map((group) => (
       builtInRoutines.length > 0 && groupByValue === "none" && group.key === "__all"
-        ? { ...group, label: "Custom routines" }
+        ? { ...group, label: t("pages.routines.customRoutines", { defaultValue: "Custom routines" }) }
         : group
     ));
 
@@ -256,7 +266,7 @@ export function buildRoutineSections(
     ...customGroups,
     {
       key: builtInRoutineGroupKey,
-      label: "Built-in routines",
+      label: t("pages.routines.builtInRoutines", { defaultValue: "Built-in routines" }),
       items: builtInRoutines,
     },
   ];
@@ -318,6 +328,7 @@ export function Routines() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { pushToast } = useToastActions();
+  const { t } = useTranslation();
   const descriptionEditorRef = useRef<MarkdownEditorRef>(null);
   const titleInputRef = useRef<HTMLTextAreaElement | null>(null);
   const assigneeSelectorRef = useRef<HTMLButtonElement | null>(null);
@@ -366,8 +377,8 @@ export function Routines() {
   const folderSelection = normalizeFolderSelection(searchParams.get("folder"));
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Routines" }]);
-  }, [setBreadcrumbs]);
+    setBreadcrumbs([{ label: t("pages.routines.title", { defaultValue: "Routines" }) }]);
+  }, [setBreadcrumbs, t]);
 
   useEffect(() => {
     setRoutineViewState(getRoutineViewState(routineViewStateKey));
@@ -453,10 +464,10 @@ export function Routines() {
       setAdvancedOpen(false);
       await queryClient.invalidateQueries({ queryKey: queryKeys.routines.list(selectedCompanyId!) });
       pushToast({
-        title: "Routine created",
+        title: t("pages.routines.routineCreated", { defaultValue: "Routine created" }),
         body: routine.assigneeAgentId
-          ? "Add the first trigger to turn it into a live workflow."
-          : "Draft saved. Add a default agent before enabling automation.",
+          ? t("pages.routines.routineCreatedWithAssigneeBody", { defaultValue: "Add the first trigger to turn it into a live workflow." })
+          : t("pages.routines.routineCreatedDraftBody", { defaultValue: "Draft saved. Add a default agent before enabling automation." }),
         tone: "success",
       });
       navigate(routineDetailHref(routine.id, "triggers"));
@@ -482,7 +493,7 @@ export function Routines() {
           ]);
         } catch (moveError) {
           pushToast({
-            title: "Folder created, move failed",
+            title: t("pages.routines.folderCreatedMoveFailed", { defaultValue: "Folder created, move failed" }),
             body: describeError(moveError, { action: "move the selected routines" }).body,
             tone: "error",
           });
@@ -491,11 +502,11 @@ export function Routines() {
       } else {
         setFolderSelection(folder.id);
       }
-      pushToast({ title: "Folder created", body: folder.name, tone: "success" });
+      pushToast({ title: t("pages.routines.folderCreated", { defaultValue: "Folder created" }), body: folder.name, tone: "success" });
     },
     onError: (mutationError) => {
       pushToast({
-        title: "Failed to save folder",
+        title: t("pages.routines.failedToSaveFolder", { defaultValue: "Failed to save folder" }),
         body: describeError(mutationError, { action: "save the folder" }).body,
         tone: "error",
       });
@@ -511,7 +522,7 @@ export function Routines() {
     },
     onError: (mutationError) => {
       pushToast({
-        title: "Folder save failed",
+        title: t("pages.routines.folderSaveFailed", { defaultValue: "Folder save failed" }),
         body: describeError(mutationError, { action: "update the folder" }).body,
         tone: "error",
       });
@@ -526,11 +537,11 @@ export function Routines() {
         queryClient.invalidateQueries({ queryKey: queryKeys.routines.list(selectedCompanyId!) }),
         queryClient.invalidateQueries({ queryKey: queryKeys.folders.list(selectedCompanyId!, "routine") }),
       ]);
-      pushToast({ title: "Folder deleted", body: "Items moved to Unfiled.", tone: "success" });
+      pushToast({ title: t("pages.routines.folderDeleted", { defaultValue: "Folder deleted" }), body: t("pages.routines.itemsMovedToUnfiled", { defaultValue: "Items moved to Unfiled." }), tone: "success" });
     },
     onError: (mutationError) => {
       pushToast({
-        title: "Folder delete failed",
+        title: t("pages.routines.folderDeleteFailed", { defaultValue: "Folder delete failed" }),
         body: describeError(mutationError, { action: "delete the folder" }).body,
         tone: "error",
       });
@@ -547,7 +558,7 @@ export function Routines() {
     },
     onError: (mutationError) => {
       pushToast({
-        title: "Move failed",
+        title: t("pages.routines.moveFailed", { defaultValue: "Move failed" }),
         body: describeError(mutationError, { action: "move the routine" }).body,
         tone: "error",
       });
@@ -569,7 +580,7 @@ export function Routines() {
     },
     onError: (mutationError) => {
       pushToast({
-        title: "Failed to update routine",
+        title: t("pages.routines.failedToUpdateRoutine", { defaultValue: "Failed to update routine" }),
         body: describeError(mutationError, { action: "update the routine" }).body,
         tone: "error",
       });
@@ -604,7 +615,7 @@ export function Routines() {
     },
     onError: (mutationError) => {
       pushToast({
-        title: "Routine run failed",
+        title: t("pages.routines.routineRunFailed", { defaultValue: "Routine run failed" }),
         body: describeError(mutationError, { action: "start the routine run" }).body,
         tone: "error",
       });
@@ -708,7 +719,7 @@ export function Routines() {
   );
   const routineSections = useMemo(
     () => buildRoutineSections(sortedRoutines, routineViewState.groupBy, projectById, agentById, folderById),
-    [agentById, folderById, projectById, routineViewState.groupBy, sortedRoutines],
+    [agentById, folderById, projectById, routineViewState.groupBy, sortedRoutines, t],
   );
   const currentAssignee = draft.assigneeAgentId ? agentById.get(draft.assigneeAgentId) ?? null : null;
   const currentProject = draft.projectId ? projectById.get(draft.projectId) ?? null : null;
@@ -759,10 +770,14 @@ export function Routines() {
         queryClient.invalidateQueries({ queryKey: queryKeys.routines.list(selectedCompanyId!) }),
         queryClient.invalidateQueries({ queryKey: queryKeys.folders.list(selectedCompanyId!, "routine") }),
       ]);
-      pushToast({ title: "Routines moved", body: `${ids.length} routine${ids.length === 1 ? "" : "s"} filed.`, tone: "success" });
+      pushToast({
+        title: t("pages.routines.routinesMoved", { defaultValue: "Routines moved" }),
+        body: t("pages.routines.routinesFiledCount", { defaultValue_one: "{{count}} routine filed.", defaultValue_other: "{{count}} routines filed.", count: ids.length }),
+        tone: "success",
+      });
     } catch (moveError) {
       pushToast({
-        title: "Failed to move routines",
+        title: t("pages.routines.failedToMoveRoutines", { defaultValue: "Failed to move routines" }),
         body: describeError(moveError, { action: "move the selected routines" }).body,
         tone: "error",
       });
@@ -776,8 +791,8 @@ export function Routines() {
   function handleToggleEnabled(routine: RoutineListItem, enabled: boolean) {
     if (!enabled && !routine.assigneeAgentId) {
       pushToast({
-        title: "Default agent required",
-        body: "Set a default agent before enabling routine automation.",
+        title: t("pages.routines.defaultAgentRequired", { defaultValue: "Default agent required" }),
+        body: t("pages.routines.defaultAgentRequiredBody", { defaultValue: "Set a default agent before enabling routine automation." }),
         tone: "warn",
       });
       return;
@@ -830,8 +845,8 @@ export function Routines() {
             value={activeTab}
             onValueChange={handleLegacyTabChange}
             items={[
-              { value: "routines", label: "Routines" },
-              { value: "runs", label: "Recent Runs" },
+              { value: "routines", label: t("pages.routines.title", { defaultValue: "Routines" }) },
+              { value: "runs", label: t("pages.routines.recentRuns", { defaultValue: "Recent Runs" }) },
             ]}
           />
         </Tabs>
@@ -872,8 +887,8 @@ export function Routines() {
             value={activeTab}
             onValueChange={handleLegacyTabChange}
             items={[
-              { value: "routines", label: "Routines" },
-              { value: "runs", label: "Recent Runs" },
+              { value: "routines", label: t("pages.routines.title", { defaultValue: "Routines" }) },
+              { value: "runs", label: t("pages.routines.recentRuns", { defaultValue: "Recent Runs" }) },
             ]}
           />
         </Tabs>
@@ -906,9 +921,9 @@ export function Routines() {
         >
           <div className="shrink-0 flex flex-wrap items-center justify-between gap-3 border-b border-border/60 px-5 py-3">
             <div>
-              <p className="text-xs font-medium uppercase tracking-(--tracking-caps) text-muted-foreground">New routine</p>
+              <p className="text-xs font-medium uppercase tracking-(--tracking-caps) text-muted-foreground">{t("pages.routines.newRoutine", { defaultValue: "New routine" })}</p>
               <p className="text-sm text-muted-foreground">
-                Define the recurring work first. Default project and agent are optional for draft routines.
+                {t("pages.routines.composerSubtitle", { defaultValue: "Define the recurring work first. Default project and agent are optional for draft routines." })}
               </p>
             </div>
             <Button
@@ -920,7 +935,7 @@ export function Routines() {
               }}
               disabled={createRoutine.isPending}
             >
-              Cancel
+              {t("pages.routines.cancel", { defaultValue: "Cancel" })}
             </Button>
           </div>
 
@@ -929,7 +944,7 @@ export function Routines() {
               <textarea
                 ref={titleInputRef}
                 className="w-full resize-none overflow-hidden bg-transparent text-xl font-semibold outline-none placeholder:text-muted-foreground/50"
-                placeholder="Routine title"
+                placeholder={t("pages.routines.routineTitlePlaceholder", { defaultValue: "Routine title" })}
                 rows={1}
                 value={draft.title}
                 onChange={(event) => {
@@ -962,16 +977,16 @@ export function Routines() {
             <div className="px-5 pb-3">
               <div className="overflow-x-auto overscroll-x-contain">
                 <div className="inline-flex min-w-full flex-wrap items-center gap-2 text-sm text-muted-foreground sm:min-w-max sm:flex-nowrap">
-                  <span>For</span>
+                  <span>{t("pages.routines.for", { defaultValue: "For" })}</span>
                   <InlineEntitySelector
                     ref={assigneeSelectorRef}
                     value={draft.assigneeAgentId}
                     options={assigneeOptions}
                     recentOptionIds={recentAssigneeIds}
-                    placeholder="Responsible"
-                    noneLabel="No responsible"
-                    searchPlaceholder="Search responsible..."
-                    emptyMessage="No responsible found."
+                    placeholder={t("pages.routines.responsible", { defaultValue: "Responsible" })}
+                    noneLabel={t("pages.routines.noResponsible", { defaultValue: "No responsible" })}
+                    searchPlaceholder={t("pages.routines.searchResponsiblePlaceholder", { defaultValue: "Search responsible..." })}
+                    emptyMessage={t("pages.routines.noResponsibleFound", { defaultValue: "No responsible found." })}
                     onChange={(assigneeAgentId) => {
                       if (assigneeAgentId) trackRecentAssignee(assigneeAgentId);
                       setDraft((current) => ({ ...current, assigneeAgentId }));
@@ -994,7 +1009,7 @@ export function Routines() {
                           <span className="truncate">{option.label}</span>
                         )
                       ) : (
-                        <span className="text-muted-foreground">Responsible</span>
+                        <span className="text-muted-foreground">{t("pages.routines.responsible", { defaultValue: "Responsible" })}</span>
                       )
                     }
                     renderOption={(option) => {
@@ -1008,16 +1023,16 @@ export function Routines() {
                       );
                     }}
                   />
-                  <span>in</span>
+                  <span>{t("pages.routines.in", { defaultValue: "in" })}</span>
                   <InlineEntitySelector
                     ref={projectSelectorRef}
                     value={draft.projectId}
                     options={projectOptions}
                     recentOptionIds={recentProjectIds}
-                    placeholder="Project"
-                    noneLabel="No project"
-                    searchPlaceholder="Search projects..."
-                    emptyMessage="No projects found."
+                    placeholder={t("pages.routines.project", { defaultValue: "Project" })}
+                    noneLabel={t("pages.routines.noProject", { defaultValue: "No project" })}
+                    searchPlaceholder={t("pages.routines.searchProjectsPlaceholder", { defaultValue: "Search projects..." })}
+                    emptyMessage={t("pages.routines.noProjectsFound", { defaultValue: "No projects found." })}
                     onChange={(projectId) => {
                       if (projectId) trackRecentProject(projectId);
                       setDraft((current) => ({ ...current, projectId }));
@@ -1033,7 +1048,7 @@ export function Routines() {
                           <span className="truncate">{option.label}</span>
                         </>
                       ) : (
-                        <span className="text-muted-foreground">Project</span>
+                        <span className="text-muted-foreground">{t("pages.routines.project", { defaultValue: "Project" })}</span>
                       )
                     }
                     renderOption={(option) => {
@@ -1050,7 +1065,7 @@ export function Routines() {
                       );
                     }}
                   />
-                  <span>filed in</span>
+                  <span>{t("pages.routines.filedIn", { defaultValue: "filed in" })}</span>
                   <Select
                     value={draft.folderId ?? "__unfiled"}
                     onValueChange={(value) => setDraft((current) => ({
@@ -1062,7 +1077,7 @@ export function Routines() {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="__unfiled">Unfiled</SelectItem>
+                      <SelectItem value="__unfiled">{t("pages.routines.unfiled", { defaultValue: "Unfiled" })}</SelectItem>
                       {(routineFolders?.folders ?? []).map((folder) => (
                         <SelectItem key={folder.id} value={folder.id}>
                           {folder.name}
@@ -1079,7 +1094,7 @@ export function Routines() {
                 ref={descriptionEditorRef}
                 value={draft.description}
                 onChange={(description) => setDraft((current) => ({ ...current, description }))}
-                placeholder="Add instructions..."
+                placeholder={t("pages.routines.addInstructionsPlaceholder", { defaultValue: "Add instructions..." })}
                 bordered={false}
                 contentClassName="min-h-(--sz-160px) text-sm text-muted-foreground"
                 mentions={mentionOptions}
@@ -1095,15 +1110,15 @@ export function Routines() {
               <Collapsible open={advancedOpen} onOpenChange={setAdvancedOpen}>
                 <CollapsibleTrigger className="flex w-full items-center justify-between text-left">
                   <div>
-                    <p className="text-sm font-medium">Advanced delivery settings</p>
-                    <p className="text-sm text-muted-foreground">Keep policy controls secondary to the work definition.</p>
+                    <p className="text-sm font-medium">{t("pages.routines.advancedDeliverySettings", { defaultValue: "Advanced delivery settings" })}</p>
+                    <p className="text-sm text-muted-foreground">{t("pages.routines.advancedDeliveryHint", { defaultValue: "Keep policy controls secondary to the work definition." })}</p>
                   </div>
                   {advancedOpen ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
                 </CollapsibleTrigger>
                 <CollapsibleContent className="pt-3">
                   <div className="grid gap-4 md:grid-cols-2">
                     <div className="space-y-2">
-                      <p className="text-xs font-medium uppercase tracking-(--tracking-caps) text-muted-foreground">Concurrency</p>
+                      <p className="text-xs font-medium uppercase tracking-(--tracking-caps) text-muted-foreground">{t("pages.routines.concurrency", { defaultValue: "Concurrency" })}</p>
                       <Select
                         value={draft.concurrencyPolicy}
                         onValueChange={(concurrencyPolicy) => setDraft((current) => ({ ...current, concurrencyPolicy }))}
@@ -1117,10 +1132,10 @@ export function Routines() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <p className="text-xs text-muted-foreground">{concurrencyPolicyDescriptions[draft.concurrencyPolicy]}</p>
+                      <p className="text-xs text-muted-foreground">{t(concurrencyPolicyDescriptionKeys[draft.concurrencyPolicy], { defaultValue: concurrencyPolicyDescriptions[draft.concurrencyPolicy] })}</p>
                     </div>
                     <div className="space-y-2">
-                      <p className="text-xs font-medium uppercase tracking-(--tracking-caps) text-muted-foreground">Catch-up</p>
+                      <p className="text-xs font-medium uppercase tracking-(--tracking-caps) text-muted-foreground">{t("pages.routines.catchUp", { defaultValue: "Catch-up" })}</p>
                       <Select
                         value={draft.catchUpPolicy}
                         onValueChange={(catchUpPolicy) => setDraft((current) => ({ ...current, catchUpPolicy }))}
@@ -1134,7 +1149,7 @@ export function Routines() {
                           ))}
                         </SelectContent>
                       </Select>
-                      <p className="text-xs text-muted-foreground">{catchUpPolicyDescriptions[draft.catchUpPolicy]}</p>
+                      <p className="text-xs text-muted-foreground">{t(catchUpPolicyDescriptionKeys[draft.catchUpPolicy], { defaultValue: catchUpPolicyDescriptions[draft.catchUpPolicy] })}</p>
                     </div>
                   </div>
                 </CollapsibleContent>
@@ -1144,7 +1159,7 @@ export function Routines() {
 
           <div className="shrink-0 flex flex-col gap-3 border-t border-border/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-sm text-muted-foreground">
-              After creation, Paperclip takes you straight to trigger setup. Draft routines stay paused until you add a default agent.
+              {t("pages.routines.composerFooterHint", { defaultValue: "After creation, Paperclip takes you straight to trigger setup. Draft routines stay paused until you add a default agent." })}
             </div>
             <div className="flex flex-col gap-2 sm:items-end">
               <Button
@@ -1155,7 +1170,7 @@ export function Routines() {
                 }
               >
                 <Plus className="mr-2 h-4 w-4" />
-                {createRoutine.isPending ? "Creating..." : "Create routine"}
+                {createRoutine.isPending ? t("pages.routines.creating", { defaultValue: "Creating..." }) : t("pages.routines.createRoutine", { defaultValue: "Create routine" })}
               </Button>
               {createRoutine.isError ? ( // query-error-ok: mutation result, not a query
                 <p role="alert" className="text-sm text-destructive">
@@ -1181,8 +1196,8 @@ export function Routines() {
             <FolderRail
               result={railFolderResult}
               selection={folderSelection}
-              allLabel="All routines"
-              itemLabelPlural="routines"
+              allLabel={t("pages.routines.allRoutines", { defaultValue: "All routines" })}
+              itemLabelPlural={t("pages.routines.itemLabelPlural", { defaultValue: "routines" })}
               loading={foldersLoading}
               onSelect={setFolderSelection}
               onCreate={() => openCreateFolder()}
@@ -1197,11 +1212,11 @@ export function Routines() {
           <div className="min-w-0 flex-1">
           {routineViewState.groupBy === "folder" && hasRoutineFolders ? (
             <div className="mb-3 flex flex-wrap items-center gap-2">
-              {folderSelection === "all" ? <FolderIconHeader label="All routines" count={sortedRoutines.length} /> : (
+              {folderSelection === "all" ? <FolderIconHeader label={t("pages.routines.allRoutines", { defaultValue: "All routines" })} count={sortedRoutines.length} /> : (
                 <div className="flex min-w-0 items-center gap-2 text-sm">
                   <FolderSwatch color={activeFolder?.color} />
-                  <span className="truncate font-medium">{folderSelection === "unfiled" ? "Unfiled" : activeFolder?.name ?? "Folder"}</span>
-                  <span className="text-muted-foreground">{sortedRoutines.length} routine{sortedRoutines.length === 1 ? "" : "s"}</span>
+                  <span className="truncate font-medium">{folderSelection === "unfiled" ? t("pages.routines.unfiled", { defaultValue: "Unfiled" }) : activeFolder?.name ?? t("pages.routines.folder", { defaultValue: "Folder" })}</span>
+                  <span className="text-muted-foreground">{t("pages.routines.routineCount", { defaultValue_one: "{{count}} routine", defaultValue_other: "{{count}} routines", count: sortedRoutines.length })}</span>
                 </div>
               )}
             </div>
@@ -1209,7 +1224,7 @@ export function Routines() {
           {routineViewState.groupBy === "folder" && !hasRoutineFolders && !foldersLoading && visibleRoutines.length > 0 ? (
             <AllUnfiledBanner
               storageKey={`paperclip:routines-folder-nudge:${selectedCompanyId ?? "none"}`}
-              itemLabelPlural="routines"
+              itemLabelPlural={t("pages.routines.itemLabelPlural", { defaultValue: "routines" })}
               onCreateFolder={() => openCreateFolder()}
             />
           ) : null}
@@ -1230,7 +1245,7 @@ export function Routines() {
             <div className="py-12">
               <EmptyState
                 icon={Repeat}
-                message="No active routines. Use Create routine to define the first recurring workflow."
+                message={t("pages.routines.noActiveRoutines", { defaultValue: "No active routines. Use Create routine to define the first recurring workflow." })}
               />
             </div>
           ) : sortedRoutines.length === 0 ? (
@@ -1243,7 +1258,7 @@ export function Routines() {
                 <div className="mt-3 flex justify-center">
                   <Button size="sm" onClick={openCreateRoutine}>
                     <Plus className="mr-2 h-3.5 w-3.5" />
-                    New routine in this folder
+                    {t("pages.routines.newRoutineInFolder", { defaultValue: "New routine in this folder" })}
                   </Button>
                 </div>
               ) : null}
@@ -1303,13 +1318,13 @@ export function Routines() {
                                 const previousFolderId = routine.folderId ?? null;
                                 moveRoutineToFolder.mutate({ itemId: routine.id, folderId });
                                 pushToast({
-                                  title: "Routine moved",
+                                  title: t("pages.routines.routineMoved", { defaultValue: "Routine moved" }),
                                   body: folderId
-                                    ? `Moved "${routine.title}" to ${routineFolders?.folders.find((folder) => folder.id === folderId)?.name ?? "folder"}.`
-                                    : `Moved "${routine.title}" to Unfiled.`,
+                                    ? t("pages.routines.movedRoutineToFolder", { defaultValue: "Moved \"{{title}}\" to {{folder}}.", title: routine.title, folder: routineFolders?.folders.find((folder) => folder.id === folderId)?.name ?? t("pages.routines.folderFallback", { defaultValue: "folder" }) })
+                                    : t("pages.routines.movedRoutineToUnfiled", { defaultValue: "Moved \"{{title}}\" to Unfiled.", title: routine.title }),
                                   tone: "success",
                                   action: {
-                                    label: "Undo",
+                                    label: t("pages.routines.undo", { defaultValue: "Undo" }),
                                     onClick: () => moveRoutineToFolder.mutate({ itemId: routine.id, folderId: previousFolderId }),
                                   },
                                 });
@@ -1342,7 +1357,7 @@ export function Routines() {
       <DeleteFolderDialog
         open={deleteFolderTarget !== null}
         folder={deleteFolderTarget}
-        itemLabelPlural="routines"
+        itemLabelPlural={t("pages.routines.itemLabelPlural", { defaultValue: "routines" })}
         pending={deleteFolder.isPending}
         onOpenChange={(open) => {
           if (!open) setDeleteFolderTarget(null);
@@ -1356,8 +1371,8 @@ export function Routines() {
         onOpenChange={setMobileFoldersOpen}
         result={railFolderResult}
         selection={folderSelection}
-        allLabel="All routines"
-        itemLabelPlural="Routines"
+        allLabel={t("pages.routines.allRoutines", { defaultValue: "All routines" })}
+        itemLabelPlural={t("pages.routines.itemLabelPluralCapitalized", { defaultValue: "Routines" })}
         onSelect={setFolderSelection}
         onCreate={() => openCreateFolder()}
       />
@@ -1385,11 +1400,12 @@ export function Routines() {
 }
 
 function FolderIconHeader({ label, count }: { label: string; count: number }) {
+  const { t } = useTranslation();
   return (
     <div className="flex min-w-0 items-center gap-2 text-sm">
       <Repeat className="h-3.5 w-3.5 text-muted-foreground" />
       <span className="truncate font-medium">{label}</span>
-      <span className="text-muted-foreground">{count} routine{count === 1 ? "" : "s"}</span>
+      <span className="text-muted-foreground">{t("pages.routines.routineCount", { defaultValue_one: "{{count}} routine", defaultValue_other: "{{count}} routines", count })}</span>
     </div>
   );
 }

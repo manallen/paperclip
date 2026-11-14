@@ -1,6 +1,7 @@
 import { companyProjectsQuery } from "@/lib/company-projects-query";
 import { describeError } from "../api/errors";
 import { useSelectedHeartbeatRun } from "../hooks/useSelectedHeartbeatRun";
+import { t, useTranslation } from "@/i18n";
 import { grokBotApi } from "@/api/grokBot";
 import { GrokBotWorkSummary } from "@/components/GrokBotWorkSummary";
 import { PrimaryAgentCrownButton } from "@/components/primary-agent/PrimaryAgentPresentation";
@@ -223,12 +224,12 @@ function shouldUseMarkdownInstructionsEditor(input: {
   return isMarkdown(input.selectedPath);
 }
 
-const sourceLabels: Record<string, string> = {
-  timer: "Timer",
-  assignment: "Assignment",
-  on_demand: "On-demand",
-  automation: "Automation",
-};
+const sourceLabels = (): Record<string, string> => ({
+  timer: t("pages.agentDetail.sourceTimer", { defaultValue: "Timer" }),
+  assignment: t("pages.agentDetail.sourceAssignment", { defaultValue: "Assignment" }),
+  on_demand: t("pages.agentDetail.sourceOnDemand", { defaultValue: "On-demand" }),
+  automation: t("pages.agentDetail.sourceAutomation", { defaultValue: "Automation" }),
+});
 
 /** @deprecated Use AGENT_DETAIL_NAVIGATION for contextual navigation. */
 export const AGENT_DETAIL_TABS = AGENT_DETAIL_NAVIGATION.flatMap((section) => section.items);
@@ -338,17 +339,17 @@ const OVERVIEW_ACTIVITY_LIMIT = 200;
 function agentViewDescription(view: AgentDetailView, name: string): string | null {
   switch (view) {
     case "runtime":
-      return `How ${name} runs: harness, model and environment.`;
+      return t("pages.agentDetail.viewRuntimeDescription", { defaultValue: "How {{name}} runs: harness, model and environment.", name });
     case "secrets":
-      return "Secrets this agent can reach. Values are never shown here.";
+      return t("pages.agentDetail.viewSecretsDescription", { defaultValue: "Secrets this agent can reach. Values are never shown here." });
     case "permissions":
-      return `What ${name} may do without asking, and where.`;
+      return t("pages.agentDetail.viewPermissionsDescription", { defaultValue: "What {{name}} may do without asking, and where.", name });
     case "activity":
-      return `Everything ${name} did and everything done to ${name}.`;
+      return t("pages.agentDetail.viewActivityDescription", { defaultValue: "Everything {{name}} did and everything done to {{name}}.", name });
     case "runs":
-      return `Every execution of ${name}, newest first.`;
+      return t("pages.agentDetail.viewRunsDescription", { defaultValue: "Every execution of {{name}}, newest first.", name });
     case "costs":
-      return `What ${name} spent, by model.`;
+      return t("pages.agentDetail.viewCostsDescription", { defaultValue: "What {{name}} spent, by model.", name });
     default:
       return null;
   }
@@ -367,6 +368,7 @@ export function AgentDetail() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
   const [actionError, setActionError] = useState<string | null>(null);
   const [dismissedLeftAgentIds, setDismissedLeftAgentIds] = useState<Set<string>>(() => new Set());
   const activeView: AgentDetailView = urlRunId ? "run-detail"
@@ -478,7 +480,7 @@ export function AgentDetail() {
       builtInAgentsApi.reset(resolvedCompanyId!, builtInState!.definition.key, [kind]),
     onSuccess: invalidateBuiltIn,
     onError: (error) => {
-      setActionError(error instanceof Error ? error.message : "Failed to update bundle resource");
+      setActionError(error instanceof Error ? error.message : t("pages.agentDetail.failedToUpdateBundleResource", { defaultValue: "Failed to update bundle resource" }));
     },
   });
   const runBuiltInRoutine = useMutation({
@@ -486,7 +488,7 @@ export function AgentDetail() {
       builtInAgentsApi.runRoutine(resolvedCompanyId!, builtInState!.definition.key, routineKey),
     onSuccess: invalidateBuiltIn,
     onError: (error) => {
-      setActionError(error instanceof Error ? error.message : "Failed to run built-in routine");
+      setActionError(error instanceof Error ? error.message : t("pages.agentDetail.failedToRunRoutine", { defaultValue: "Failed to run built-in routine" }));
     },
   });
   const enableBuiltInSchedule = useMutation({
@@ -494,7 +496,7 @@ export function AgentDetail() {
       builtInAgentsApi.enableRoutineSchedule(resolvedCompanyId!, builtInState!.definition.key, routineKey),
     onSuccess: invalidateBuiltIn,
     onError: (error) => {
-      setActionError(error instanceof Error ? error.message : "Failed to enable routine schedule");
+      setActionError(error instanceof Error ? error.message : t("pages.agentDetail.failedToEnableSchedule", { defaultValue: "Failed to enable routine schedule" }));
     },
   });
   const disableBuiltInSchedule = useMutation({
@@ -502,7 +504,7 @@ export function AgentDetail() {
       builtInAgentsApi.disableRoutineSchedule(resolvedCompanyId!, builtInState!.definition.key, routineKey),
     onSuccess: invalidateBuiltIn,
     onError: (error) => {
-      setActionError(error instanceof Error ? error.message : "Failed to disable routine schedule");
+      setActionError(error instanceof Error ? error.message : t("pages.agentDetail.failedToDisableSchedule", { defaultValue: "Failed to disable routine schedule" }));
     },
   });
   const builtInRoutineActionPending =
@@ -640,7 +642,7 @@ export function AgentDetail() {
       }
     },
     onError: (err) => {
-      setActionError(err instanceof Error ? err.message : "Action failed");
+      setActionError(err instanceof Error ? err.message : t("pages.agentDetail.actionFailed", { defaultValue: "Action failed" }));
     },
   });
 
@@ -667,15 +669,15 @@ export function AgentDetail() {
       }
     },
     onError: (err) => {
-      setActionError(err instanceof Error ? err.message : "Failed to update permissions");
+      setActionError(err instanceof Error ? err.message : t("pages.agentDetail.failedToUpdatePermissions", { defaultValue: "Failed to update permissions" }));
     },
   });
 
   useEffect(() => {
     const crumbs: { label: string; href?: string }[] = [
-      { label: "Agents", href: "/agents" },
+      { label: t("pages.agentDetail.breadcrumbAgents", { defaultValue: "Agents" }), href: "/agents" },
     ];
-    const agentName = agent?.name ?? routeAgentRef ?? "Agent";
+    const agentName = agent?.name ?? routeAgentRef ?? t("pages.agentDetail.agentFallback", { defaultValue: "Agent" });
     if (activeView === "overview" && !urlRunId) {
       crumbs.push({ label: agentName });
     } else {
@@ -688,7 +690,7 @@ export function AgentDetail() {
       }
     }
     setBreadcrumbs(crumbs);
-  }, [setBreadcrumbs, agent, routeAgentRef, canonicalAgentRef, activeView, urlRunId]);
+  }, [setBreadcrumbs, agent, routeAgentRef, canonicalAgentRef, activeView, urlRunId, t]);
 
   useEffect(() => {
     closePanel();
@@ -813,7 +815,7 @@ export function AgentDetail() {
       {showLeftAgentNotice ? (
         <div className="flex items-center gap-3 border border-yellow-300/35 bg-yellow-300/10 px-3 py-2 text-sm text-yellow-900 dark:text-yellow-100">
           <p className="min-w-0 flex-1">
-            You left this agent. It no longer appears in your sidebar.
+            {t("pages.agentDetail.leftAgentNotice", { defaultValue: "You left this agent. It no longer appears in your sidebar." })}
           </p>
           <MembershipAction
             compact
@@ -837,7 +839,7 @@ export function AgentDetail() {
           <button
             type="button"
             className="h-6 w-6 shrink-0 text-yellow-900/70 hover:text-yellow-900 dark:text-yellow-100/70 dark:hover:text-yellow-100"
-            aria-label="Dismiss agent membership notice"
+            aria-label={t("pages.agentDetail.dismissMembershipNotice", { defaultValue: "Dismiss agent membership notice" })}
             onClick={() => setDismissedLeftAgentIds((current) => new Set(current).add(agent.id))}
           >
             ×
@@ -848,7 +850,7 @@ export function AgentDetail() {
         <div className="flex items-start gap-3 border border-amber-300/35 bg-amber-300/10 px-3 py-2 text-sm text-amber-900 dark:text-amber-100">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <div className="min-w-0 space-y-1">
-            <p className="font-medium">Escalation path is paused</p>
+            <p className="font-medium">{t("pages.agentDetail.escalationPaused", { defaultValue: "Escalation path is paused" })}</p>
             <p className="text-amber-900/90 dark:text-amber-100/90">{pausedEscalationWarning}</p>
           </div>
         </div>
@@ -857,9 +859,9 @@ export function AgentDetail() {
         <div className="flex items-start gap-3 border border-amber-300/35 bg-amber-300/10 px-3 py-2 text-sm text-amber-900 dark:text-amber-100">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
           <div className="min-w-0 space-y-1">
-            <p className="font-medium">Invalid reporting chain</p>
+            <p className="font-medium">{t("pages.agentDetail.invalidReportingChain", { defaultValue: "Invalid reporting chain" })}</p>
             <p className="text-amber-900/90 dark:text-amber-100/90">
-              {agent.name} cannot accept tasks or start runs until its reporting chain is repaired.
+              {t("pages.agentDetail.invalidChainDetail", { defaultValue: "{{name}} cannot accept tasks or start runs until its reporting chain is repaired.", name: agent.name })}
             </p>
             <p className="break-words font-mono text-xs text-amber-900/80 dark:text-amber-100/80">
               {formatOrgChainHealthPath(agent)}
@@ -868,7 +870,7 @@ export function AgentDetail() {
               <p className="text-amber-900/85 dark:text-amber-100/85">{agent.orgChainHealth.repairGuidance}</p>
             ) : (
               <p className="text-amber-900/85 dark:text-amber-100/85">
-                Assign this agent to an active manager/root, or explicitly pause or terminate the affected agent/subtree.
+                {t("pages.agentDetail.invalidChainRepairHint", { defaultValue: "Assign this agent to an active manager/root, or explicitly pause or terminate the affected agent/subtree." })}
               </p>
             )}
           </div>
@@ -996,7 +998,7 @@ export function AgentDetail() {
       {builtInState && (
         <InlineBanner
           tone="info"
-          title="Built-in agent"
+          title={t("pages.agentDetail.builtInAgent", { defaultValue: "Built-in agent" })}
           actions={
             <Button
               variant="outline"
@@ -1004,13 +1006,18 @@ export function AgentDetail() {
               onClick={() => resetBuiltIn.mutate()}
               disabled={resetBuiltIn.isPending}
             >
-              {resetBuiltIn.isPending ? "Resetting…" : "Reset to defaults"}
+              {resetBuiltIn.isPending ? t("pages.agentDetail.resetting", { defaultValue: "Resetting…" }) : t("pages.agentDetail.resetToDefaults", { defaultValue: "Reset to defaults" })}
             </Button>
           }
         >
-          Ships with Paperclip and powers <strong>{builtInFeatureLabel}</strong>. Configure it like
-          any agent — model, instructions, budget. It can be paused but not deleted; pausing it
-          pauses {builtInFeatureLabel}.
+          {t("pages.agentDetail.builtInAgentDescription", {
+            defaultValue: "Ships with Paperclip and powers",
+          })}{" "}
+          <strong>{builtInFeatureLabel}</strong>
+          {t("pages.agentDetail.builtInAgentDescriptionSuffix", {
+            defaultValue: ". Configure it like any agent — model, instructions, budget. It can be paused but not deleted; pausing it pauses {{feature}}.",
+            feature: builtInFeatureLabel,
+          })}
         </InlineBanner>
       )}
 
@@ -1044,7 +1051,7 @@ export function AgentDetail() {
       {actionError && <p className="text-sm text-destructive">{actionError}</p>}
       {isPendingApproval && (
         <div className="flex flex-wrap items-center gap-3 rounded-md border border-amber-300/60 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-400/40 dark:bg-amber-950/30 dark:text-amber-200">
-          <span>This agent is pending board approval and cannot be invoked yet.</span>
+          <span>{t("pages.agentDetail.pendingApprovalNotice", { defaultValue: "This agent is pending board approval and cannot be invoked yet." })}</span>
           <Button
             variant="outline"
             size="sm"
@@ -1052,7 +1059,7 @@ export function AgentDetail() {
             disabled={agentAction.isPending}
           >
             <CheckCircle2 className="h-3.5 w-3.5 sm:mr-1" />
-            <span>Approve agent</span>
+            <span>{t("pages.agentDetail.approveAgent", { defaultValue: "Approve agent" })}</span>
           </Button>
         </div>
       )}
@@ -1274,6 +1281,7 @@ function LatestRunCard({
       ),
     [runs]
   );
+  const { t } = useTranslation();
 
   const liveRun = sorted.find((r) => r.status === "running" || r.status === "queued");
   const run = liveRun ?? sorted[0];
@@ -1348,7 +1356,9 @@ function LatestRunCard({
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500" />
               </span>
             )}
-            <span>{isLive ? "Live Run" : "Latest Run"}</span>
+            <span>{isLive
+              ? t("pages.agentDetail.liveRun", { defaultValue: "Live Run" })
+              : t("pages.agentDetail.latestRun", { defaultValue: "Latest Run" })}</span>
             <span className="font-mono text-xs font-normal text-muted-foreground">
               &middot; {run.id.slice(0, 8)}
             </span>
@@ -1384,7 +1394,7 @@ function LatestRunCard({
                   : run.invocationSource === "on_demand" ? "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300"
                   : "bg-muted text-muted-foreground"
               )}>
-                {sourceLabels[run.invocationSource] ?? run.invocationSource}
+                {sourceLabels()[run.invocationSource] ?? run.invocationSource}
               </Badge>
             </>
           )}
@@ -1646,6 +1656,7 @@ export function ConfigurationTab({
   const navigate = useNavigate();
   const { tab: urlTab } = useParams<{ tab?: string }>();
   const { pushToast } = useToastActions();
+  const { t } = useTranslation();
   const [awaitingRefreshAfterSave, setAwaitingRefreshAfterSave] = useState(false);
   const lastAgentRef = useRef(agent);
 
@@ -1689,7 +1700,7 @@ export function ConfigurationTab({
         || !syncAgentRouteAfterRename(queryClient, navigate, target, updated, urlTab ?? content)) {
         queryClient.invalidateQueries({ queryKey: queryKeys.agents.detail(target.urlKey) });
       }
-      pushToast({ title: "Agent saved", tone: updated.configurationWarnings?.length ? "warn" : "success",
+      pushToast({ title: t("pages.agentDetail.agentSaved", { defaultValue: "Agent saved" }), tone: updated.configurationWarnings?.length ? "warn" : "success",
         body: updated.configurationWarnings?.map(warning => warning.message).join("\n") });
     },
     onError: (err) => {
@@ -1699,8 +1710,8 @@ export function ConfigurationTab({
           ? err.message
           : err instanceof Error
             ? err.message
-            : "Could not save agent";
-      pushToast({ title: "Save failed", body: message, tone: "error" });
+            : t("pages.agentDetail.couldNotSaveAgent", { defaultValue: "Could not save agent" });
+      pushToast({ title: t("pages.agentDetail.saveFailed", { defaultValue: "Save failed" }), body: message, tone: "error" });
     },
   });
 
@@ -1730,11 +1741,11 @@ export function ConfigurationTab({
   const taskAssignLocked = agent.role === "ceo" || canCreateAgents;
   const taskAssignHint =
     taskAssignSource === "ceo_role"
-      ? "Enabled automatically for CEO agents."
+      ? t("pages.agentDetail.assignHintCeo", { defaultValue: "Enabled automatically for CEO agents." })
       : taskAssignSource === "agent_creator"
-        ? "Enabled automatically while this agent can create new agents."
+        ? t("pages.agentDetail.assignHintAgentCreator", { defaultValue: "Enabled automatically while this agent can create new agents." })
         : taskAssignSource === "explicit_grant"
-          ? "Enabled via explicit organization permission grant."
+          ? t("pages.agentDetail.assignHintExplicitGrant", { defaultValue: "Enabled via explicit organization permission grant." })
           : taskAssignSource === "simple_default"
             ? "Enabled by simple organization-wide task assignment defaults."
             : "Disabled unless explicitly granted.";
@@ -1793,9 +1804,9 @@ export function ConfigurationTab({
         <div className="flex flex-col pb-3">
           <div className="flex min-h-11 items-center justify-between gap-4 px-(--agent-detail-module-inset) py-2 text-sm">
             <div className="space-y-1">
-              <div>Can create new agents</div>
+              <div>{t("pages.agentDetail.canCreateAgents", { defaultValue: "Can create new agents" })}</div>
               <p className="text-xs text-muted-foreground">
-                Lets this agent create or hire agents. This also grants task assignment authority.
+                {t("pages.agentDetail.canCreateAgentsHint", { defaultValue: "Lets this agent create or hire agents. This also grants task assignment authority." })}
               </p>
             </div>
             <ToggleSwitch
@@ -1812,9 +1823,9 @@ export function ConfigurationTab({
           </div>
           <div className="flex min-h-11 items-center justify-between gap-4 px-(--agent-detail-module-inset) py-2 text-sm">
             <div className="space-y-1">
-              <div>Can create/import skills</div>
+              <div>{t("pages.agentDetail.canCreateSkills", { defaultValue: "Can create/import skills" })}</div>
               <p className="text-xs text-muted-foreground">
-                Lets this agent install, import, create, and scan organization skills without creating agents.
+                {t("pages.agentDetail.canCreateSkillsHint", { defaultValue: "Lets this agent install, import, create, and scan organization skills without creating agents." })}
               </p>
             </div>
             <ToggleSwitch
@@ -1831,7 +1842,7 @@ export function ConfigurationTab({
           </div>
           <div className="flex min-h-11 items-center justify-between gap-4 px-(--agent-detail-module-inset) py-2 text-sm">
             <div className="space-y-1">
-              <div>Can assign tasks</div>
+              <div>{t("pages.agentDetail.canAssignTasks", { defaultValue: "Can assign tasks" })}</div>
               <p className="text-xs text-muted-foreground">
                 {taskAssignHint}
               </p>
@@ -1878,6 +1889,7 @@ export function PromptsTab({
   const queryClient = useQueryClient();
   const { selectedCompanyId } = useCompany();
   const { isMobile } = useSidebar();
+  const { t } = useTranslation();
   const [selectedFile, setSelectedFileState] = useState<string>("AGENTS.md");
   const [instructionMode, setInstructionMode] = useState<"edit" | "raw">("raw");
   const [showFilePanel, setShowFilePanel] = useState(false);
@@ -2388,7 +2400,7 @@ export function PromptsTab({
     return (
       <div className="max-w-3xl">
         <p className="text-sm text-muted-foreground">
-          Instructions bundles are only available for local adapters.
+          {t("pages.agentDetail.bundlesLocalAdaptersOnly", { defaultValue: "Instructions bundles are only available for local adapters." })}
         </p>
       </div>
     );
@@ -2410,7 +2422,7 @@ export function PromptsTab({
         </div>
       )}
       {showSaveNotice && <p className="text-xs text-muted-foreground">
-        Saved instructions affect the next run. Active runs keep the instructions they started with, and instruction changes may start a fresh adapter session.
+        {t("pages.agentDetail.instructionsSaveNote", { defaultValue: "Saved instructions affect the next run. Active runs keep the instructions they started with, and instruction changes may start a fresh adapter session." })}
       </p>}
 
       <InstructionsBundleSettings
@@ -2439,7 +2451,7 @@ export function PromptsTab({
           isMobile && !showFilePanel && "hidden",
         )}>
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-semibold text-foreground">Files</h4>
+            <h4 className="text-sm font-semibold text-foreground">{t("pages.agentDetail.files", { defaultValue: "Files" })}</h4>
             <div className="flex items-center gap-1">
               {(
                 <Button
@@ -2519,11 +2531,11 @@ export function PromptsTab({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <span className="ml-3 shrink-0 rounded border border-amber-500/40 bg-amber-500/10 text-amber-800 dark:text-amber-200 px-1.5 py-0.5 text-(length:--text-nano) uppercase tracking-wide cursor-help">
-                        virtual file
+                        {t("pages.agentDetail.virtualFile", { defaultValue: "virtual file" })}
                       </span>
                     </TooltipTrigger>
                     <TooltipContent side="right" sideOffset={4}>
-                      Legacy inline prompt — this deprecated virtual file preserves the old promptTemplate content
+                      {t("pages.agentDetail.virtualFileTooltip", { defaultValue: "Legacy inline prompt — this deprecated virtual file preserves the old promptTemplate content" })}
                     </TooltipContent>
                   </Tooltip>
                 );
@@ -2590,9 +2602,9 @@ export function PromptsTab({
                 <p className="text-xs text-muted-foreground">
                   {selectedFileExists
                     ? selectedFileSummary?.deprecated
-                      ? "Deprecated virtual file"
+                      ? t("pages.agentDetail.deprecatedVirtualFile", { defaultValue: "Deprecated virtual file" })
                       : instructionFileDateLabel(selectedFileDetail ?? selectedFileSummary)
-                    : "New file in this bundle"}
+                    : t("pages.agentDetail.newFileInBundle", { defaultValue: "New file in this bundle" })}
                 </p>
               </div>
             </div>
@@ -2646,7 +2658,7 @@ export function PromptsTab({
                   aria-label={`Delete ${selectedOrEntryFile}`}
                   title="Delete file"
                   onClick={() => {
-                    if (confirm(`Delete ${selectedOrEntryFile}?`)) {
+                    if (confirm(t("pages.agentDetail.confirmDeleteFile", { defaultValue: "Delete {{file}}?", file: selectedOrEntryFile }))) {
                       deleteFile.mutate(selectedOrEntryFile, {
                         onSuccess: () => {
                           setSelectedFile(currentEntryFile);
@@ -2744,7 +2756,7 @@ export function PromptsTab({
                 setDraft(event.target.value);
               }}
               className="block min-h-(--sz-420px) w-full field-sizing-content resize-none bg-transparent p-(--agent-identity-panel-gap) font-mono text-xs leading-5 whitespace-pre-wrap text-foreground outline-none"
-              placeholder="File contents"
+              placeholder={t("pages.agentDetail.fileContents", { defaultValue: "File contents" })}
             />
           ) : (
             <div role="button" tabIndex={0} aria-label={`Edit ${selectedOrEntryFile} contents`}
@@ -2851,7 +2863,7 @@ function RunListItem({ run, isSelected, agentId }: { run: HeartbeatRun; isSelect
             : run.invocationSource === "on_demand" ? "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/50 dark:text-cyan-300"
             : "bg-muted text-muted-foreground"
         )}>
-          {sourceLabels[run.invocationSource] ?? run.invocationSource}
+          {sourceLabels()[run.invocationSource] ?? run.invocationSource}
         </Badge>
         {sourceResolvedFold ? <SourceResolvedFoldBadge showIcon={false} className="shrink-0 text-(length:--text-nano) py-0" /> : null}
         <span className="ml-auto text-(length:--text-micro) text-muted-foreground shrink-0">
@@ -2892,6 +2904,7 @@ export function RunsTab({
   adapterConfig: Record<string, unknown>;
 }) {
   const { isMobile } = useSidebar();
+  const { t } = useTranslation();
 
   // Sort by created descending
   const sorted = [...runs].sort(
@@ -2921,7 +2934,7 @@ export function RunsTab({
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors no-underline"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Back to runs
+            {t("pages.agentDetail.backToRuns", { defaultValue: "Back to runs" })}
           </Link>
           <RunDetail key={selectedRun.id} run={selectedRun} agentRouteId={agentRouteId} adapterType={adapterType} adapterConfig={adapterConfig} />
         </div>
@@ -3001,6 +3014,7 @@ export function RunAccountingMetrics({ run }: { run: HeartbeatRun }) {
 function RunDetail({ run: initialRun, agentRouteId, adapterType, adapterConfig }: { run: HeartbeatRun; agentRouteId: string; adapterType: string; adapterConfig: Record<string, unknown> }) {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const { data: hydratedRun } = useQuery({
     queryKey: queryKeys.runDetail(initialRun.id),
     queryFn: () => heartbeatsApi.get(initialRun.id),
@@ -3092,7 +3106,7 @@ function RunDetail({ run: initialRun, agentRouteId, adapterType, adapterConfig }
         payload: resumePayload,
       }, run.companyId);
       if (!("id" in result)) {
-        throw new Error(result.message ?? "Resume request was skipped.");
+        throw new Error(result.message ?? t("pages.agentDetail.resumeSkipped", { defaultValue: "Resume request was skipped." }));
       }
       return result;
     },
@@ -3246,7 +3260,7 @@ function RunDetail({ run: initialRun, agentRouteId, adapterType, adapterConfig }
                   disabled={resumeRun.isPending}
                 >
                   <RotateCcw className="h-3.5 w-3.5 mr-1" />
-                  {resumeRun.isPending ? "Resuming…" : "Resume"}
+                  {resumeRun.isPending ? t("pages.agentDetail.resuming", { defaultValue: "Resuming…" }) : t("pages.agentDetail.resume", { defaultValue: "Resume" })}
                 </Button>
               )}
               {canRetryRun && !canResumeLostRun && (
@@ -3258,7 +3272,7 @@ function RunDetail({ run: initialRun, agentRouteId, adapterType, adapterConfig }
                   disabled={retryRun.isPending}
                 >
                   <RotateCcw className="h-3.5 w-3.5 mr-1" />
-                  {retryRun.isPending ? "Retrying…" : "Retry"}
+                  {retryRun.isPending ? t("pages.agentDetail.retrying", { defaultValue: "Retrying…" }) : t("pages.agentDetail.retry", { defaultValue: "Retry" })}
                 </Button>
               )}
               <Button
@@ -3313,7 +3327,7 @@ function RunDetail({ run: initialRun, agentRouteId, adapterType, adapterConfig }
                 data-testid="run-detail-on-behalf-of"
                 className="text-xs text-muted-foreground"
               >
-                On behalf of{" "}
+                {t("pages.agentDetail.onBehalfOf", { defaultValue: "On behalf of" })}{" "}
                 <span className="text-foreground">
                   {responsibleUserName ?? responsibleUserLabel(null)}
                 </span>
@@ -3349,12 +3363,12 @@ function RunDetail({ run: initialRun, agentRouteId, adapterType, adapterConfig }
             )}
             {resumeRun.isError && ( // query-error-ok: mutation result, not a query
               <div className="text-xs text-destructive">
-                {resumeRun.error instanceof Error ? resumeRun.error.message : "Failed to resume run"}
+                {resumeRun.error instanceof Error ? resumeRun.error.message : t("pages.agentDetail.failedToResume", { defaultValue: "Failed to resume run" })}
               </div>
             )}
             {retryRun.isError && ( // query-error-ok: mutation result, not a query
               <div className="text-xs text-destructive">
-                {retryRun.error instanceof Error ? retryRun.error.message : "Failed to retry run"}
+                {retryRun.error instanceof Error ? retryRun.error.message : t("pages.agentDetail.failedToRetry", { defaultValue: "Failed to retry run" })}
               </div>
             )}
             {startTime && (
@@ -3370,7 +3384,7 @@ function RunDetail({ run: initialRun, agentRouteId, adapterType, adapterConfig }
                 </div>
                 {displayDurationSec !== null && (
                   <div className="text-xs text-muted-foreground">
-                    Duration: {displayDurationSec >= 60 ? `${Math.floor(displayDurationSec / 60)}m ${displayDurationSec % 60}s` : `${displayDurationSec}s`}
+                    {t("pages.agentDetail.duration", { defaultValue: "Duration: {{duration}}", duration: displayDurationSec >= 60 ? `${Math.floor(displayDurationSec / 60)}m ${displayDurationSec % 60}s` : `${displayDurationSec}s` })}
                   </div>
                 )}
               </div>
@@ -3393,18 +3407,18 @@ function RunDetail({ run: initialRun, agentRouteId, adapterType, adapterConfig }
                   onClick={() => runClaudeLogin.mutate()}
                   disabled={runClaudeLogin.isPending}
                 >
-                  {runClaudeLogin.isPending ? "Running claude login..." : "Login to Claude Code"}
+                  {runClaudeLogin.isPending ? t("pages.agentDetail.runningClaudeLogin", { defaultValue: "Running claude login..." }) : t("pages.agentDetail.loginToClaude", { defaultValue: "Login to Claude Code" })}
                 </Button>
                 {runClaudeLogin.isError && ( // query-error-ok: mutation result, not a query
                   <p className="text-xs text-destructive">
                     {runClaudeLogin.error instanceof Error
                       ? runClaudeLogin.error.message
-                      : "Failed to run Claude login"}
+                      : t("pages.agentDetail.failedClaudeLogin", { defaultValue: "Failed to run Claude login" })}
                   </p>
                 )}
                 {claudeLoginResult?.loginUrl && (
                   <p className="text-xs">
-                    Login URL:
+                    {t("pages.agentDetail.loginUrl", { defaultValue: "Login URL:" })}
                     <a
                       href={claudeLoginResult.loginUrl}
                       className="text-blue-600 underline underline-offset-2 ml-1 break-all dark:text-blue-400"
@@ -3439,8 +3453,8 @@ function RunDetail({ run: initialRun, agentRouteId, adapterType, adapterConfig }
             )}
             {hasNonZeroExit && (
               <div className="text-xs text-red-600 dark:text-red-400">
-                Exit code {run.exitCode}
-                {run.signal && <span className="text-muted-foreground ml-1">(signal: {run.signal})</span>}
+                {t("pages.agentDetail.exitCode", { defaultValue: "Exit code {{code}}", code: run.exitCode })}
+                {run.signal && <span className="text-muted-foreground ml-1">({t("pages.agentDetail.signal", { defaultValue: "signal: {{signal}}", signal: run.signal })})</span>}
               </div>
             )}
             <RunRetryDetails run={run} agentRouteId={agentRouteId} />
@@ -3457,20 +3471,19 @@ function RunDetail({ run: initialRun, agentRouteId, adapterType, adapterConfig }
               onClick={() => setSessionOpen((v) => !v)}
             >
               <ChevronRight className={cn("h-3 w-3 transition-transform", sessionOpen && "rotate-90")} />
-              Session
-              {sessionChanged && <span className="text-yellow-400 ml-1">(changed)</span>}
-            </button>
+              {t("pages.agentDetail.session", { defaultValue: "Session" })}
+              {sessionChanged && <span className="text-yellow-400 ml-1">({t("pages.agentDetail.changed", { defaultValue: "changed" })})</span>}            </button>
             {sessionOpen && (
               <div className="px-4 pb-3 space-y-1 text-xs">
                 {run.sessionIdBefore && (
                   <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground w-12">{sessionChanged ? "Before" : "ID"}</span>
+                    <span className="text-muted-foreground w-12">{sessionChanged ? t("pages.agentDetail.before", { defaultValue: "Before" }) : t("pages.agentDetail.id", { defaultValue: "ID" })}</span>
                     <CopyText text={run.sessionIdBefore} className="font-mono" />
                   </div>
                 )}
                 {sessionChanged && run.sessionIdAfter && (
                   <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground w-12">After</span>
+                    <span className="text-muted-foreground w-12">{t("pages.agentDetail.after", { defaultValue: "After" })}</span>
                     <CopyText text={run.sessionIdAfter} className="font-mono" />
                   </div>
                 )}
@@ -3483,21 +3496,24 @@ function RunDetail({ run: initialRun, agentRouteId, adapterType, adapterConfig }
                       onClick={() => {
                         const issueCount = touchedIssueIds.length;
                         const confirmed = window.confirm(
-                          `Clear session for ${issueCount} issue${issueCount === 1 ? "" : "s"} touched by this run?`,
+                          t("pages.agentDetail.clearSessionConfirm", {
+                            defaultValue: "Clear session for {{count}} issue(s) touched by this run?",
+                            count: issueCount,
+                          }),
                         );
                         if (!confirmed) return;
                         clearSessionsForTouchedIssues.mutate();
                       }}
                     >
                       {clearSessionsForTouchedIssues.isPending
-                        ? "clearing session..."
-                        : "clear session for these tasks"}
+                        ? t("pages.agentDetail.clearingSession", { defaultValue: "clearing session..." })
+                        : t("pages.agentDetail.clearSession", { defaultValue: "clear session for these tasks" })}
                     </button>
                     {clearSessionsForTouchedIssues.isError && ( // query-error-ok: mutation result, not a query
                       <p className="text-(length:--text-micro) text-destructive mt-1">
                         {clearSessionsForTouchedIssues.error instanceof Error
                           ? clearSessionsForTouchedIssues.error.message
-                          : "Failed to clear sessions"}
+                          : t("pages.agentDetail.failedToClearSessions", { defaultValue: "Failed to clear sessions" })}
                       </p>
                     )}
                   </div>
@@ -3511,7 +3527,7 @@ function RunDetail({ run: initialRun, agentRouteId, adapterType, adapterConfig }
       {/* Issues touched by this run */}
       {touchedIssues && touchedIssues.length > 0 && (
         <div className="space-y-2">
-          <span className="text-xs font-medium text-muted-foreground">Tasks Touched ({touchedIssues.length})</span>
+          <span className="text-xs font-medium text-muted-foreground">{t("pages.agentDetail.tasksTouched", { defaultValue: "Tasks Touched" })} ({touchedIssues.length})</span>
           <div className="border border-border rounded-lg divide-y divide-border">
             {touchedIssues.map((issue) => (
               <Link
@@ -3533,7 +3549,7 @@ function RunDetail({ run: initialRun, agentRouteId, adapterType, adapterConfig }
       {/* stderr excerpt for failed runs */}
       {run.stderrExcerpt && (
         <div className="space-y-1">
-          <span className="text-xs font-medium text-red-600 dark:text-red-400">stderr</span>
+          <span className="text-xs font-medium text-red-600 dark:text-red-400">{t("pages.agentDetail.stderr", { defaultValue: "stderr" })}</span>
           <pre className="bg-neutral-100 dark:bg-neutral-950 rounded-md p-3 text-xs font-mono text-red-700 dark:text-red-300 overflow-x-auto whitespace-pre-wrap">{run.stderrExcerpt}</pre>
         </div>
       )}
@@ -3541,7 +3557,7 @@ function RunDetail({ run: initialRun, agentRouteId, adapterType, adapterConfig }
       {/* stdout excerpt when no log is available */}
       {run.stdoutExcerpt && !run.logRef && (
         <div className="space-y-1">
-          <span className="text-xs font-medium text-muted-foreground">stdout</span>
+          <span className="text-xs font-medium text-muted-foreground">{t("pages.agentDetail.stdout", { defaultValue: "stdout" })}</span>
           <pre className="bg-neutral-100 dark:bg-neutral-950 rounded-md p-3 text-xs font-mono text-foreground overflow-x-auto whitespace-pre-wrap">{run.stdoutExcerpt}</pre>
         </div>
       )}
@@ -3576,6 +3592,7 @@ function RunDetail({ run: initialRun, agentRouteId, adapterType, adapterConfig }
 export function KeysTab({ agentId, companyId }: { agentId: string; companyId?: string }) {
   const queryClient = useQueryClient();
   const { pushToast } = useToastActions();
+  const { t } = useTranslation();
   const [newKeyName, setNewKeyName] = useState("");
   const [newToken, setNewToken] = useState<string | null>(null);
   const [tokenVisible, setTokenVisible] = useState(false);
@@ -3611,7 +3628,7 @@ export function KeysTab({ agentId, companyId }: { agentId: string; companyId?: s
         setTimeout(() => setCopied(false), 2000);
       })
       .catch(() => {
-        pushToast({ title: "Copy failed", body: "Clipboard access is unavailable.", tone: "error" });
+        pushToast({ title: t("pages.agentDetail.copyFailed", { defaultValue: "Copy failed" }), body: t("pages.agentDetail.clipboardUnavailable", { defaultValue: "Clipboard access is unavailable." }), tone: "error" });
       });
   }
 
@@ -3624,7 +3641,7 @@ export function KeysTab({ agentId, companyId }: { agentId: string; companyId?: s
       {newToken && (
         <div className="border border-yellow-300 dark:border-yellow-600/40 bg-yellow-50 dark:bg-yellow-500/5 rounded-lg p-4 space-y-2">
           <p className="text-sm font-medium text-yellow-700 dark:text-yellow-400">
-            API key created — copy it now, it will not be shown again.
+            {t("pages.agentDetail.apiKeyCreated", { defaultValue: "API key created — copy it now, it will not be shown again." })}
           </p>
           <div className="flex items-center gap-2">
             <code className="flex-1 bg-neutral-100 dark:bg-neutral-950 rounded px-3 py-1.5 text-xs font-mono text-green-700 dark:text-green-300 truncate">
@@ -3634,7 +3651,7 @@ export function KeysTab({ agentId, companyId }: { agentId: string; companyId?: s
               variant="ghost"
               size="icon-sm"
               onClick={() => setTokenVisible((v) => !v)}
-              title={tokenVisible ? "Hide" : "Show"}
+              title={tokenVisible ? t("pages.agentDetail.hide", { defaultValue: "Hide" }) : t("pages.agentDetail.show", { defaultValue: "Show" })}
             >
               {tokenVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
             </Button>
@@ -3642,11 +3659,11 @@ export function KeysTab({ agentId, companyId }: { agentId: string; companyId?: s
               variant="ghost"
               size="icon-sm"
               onClick={copyToken}
-              title="Copy"
+              title={t("pages.agentDetail.copy", { defaultValue: "Copy" })}
             >
               <Copy className="h-3.5 w-3.5" />
             </Button>
-            {copied && <span className="text-xs text-green-400">Copied!</span>}
+            {copied && <span className="text-xs text-green-400">{t("pages.agentDetail.copySuccess", { defaultValue: "Copied!" })}</span>}
           </div>
           <Button
             variant="ghost"
@@ -3654,7 +3671,7 @@ export function KeysTab({ agentId, companyId }: { agentId: string; companyId?: s
             className="text-muted-foreground text-xs"
             onClick={() => setNewToken(null)}
           >
-            Dismiss
+            {t("pages.agentDetail.dismiss", { defaultValue: "Dismiss" })}
           </Button>
         </div>
       )}
@@ -3663,14 +3680,14 @@ export function KeysTab({ agentId, companyId }: { agentId: string; companyId?: s
       <div className="border border-border rounded-lg p-4 space-y-3">
         <h3 className="text-xs font-medium text-muted-foreground flex items-center gap-2">
           <Key className="h-3.5 w-3.5" />
-          Create API Key
+          {t("pages.agentDetail.createApiKey", { defaultValue: "Create API Key" })}
         </h3>
         <p className="text-xs text-muted-foreground">
-          API keys allow this agent to authenticate calls to the Paperclip server.
+          {t("pages.agentDetail.apiKeysIntro", { defaultValue: "API keys allow this agent to authenticate calls to the Paperclip server." })}
         </p>
         <div className="flex items-center gap-2">
           <Input
-            placeholder="Key name (e.g. production)"
+            placeholder={t("pages.agentDetail.keyNamePlaceholder", { defaultValue: "Key name (e.g. production)" })}
             value={newKeyName}
             onChange={(e) => setNewKeyName(e.target.value)}
             className="h-8 text-sm"
@@ -3684,22 +3701,22 @@ export function KeysTab({ agentId, companyId }: { agentId: string; companyId?: s
             disabled={createKey.isPending}
           >
             <Plus className="h-3.5 w-3.5 mr-1" />
-            Create
+            {t("pages.agentDetail.create", { defaultValue: "Create" })}
           </Button>
         </div>
       </div>
 
       {/* Active keys */}
-      {isLoading && <p className="text-sm text-muted-foreground">Loading keys...</p>}
+      {isLoading && <p className="text-sm text-muted-foreground">{t("pages.agentDetail.loadingKeys", { defaultValue: "Loading keys..." })}</p>}
 
       {!isLoading && activeKeys.length === 0 && !newToken && (
-        <p className="text-sm text-muted-foreground">No active API keys.</p>
+        <p className="text-sm text-muted-foreground">{t("pages.agentDetail.noActiveKeys", { defaultValue: "No active API keys." })}</p>
       )}
 
       {activeKeys.length > 0 && (
         <div>
           <h3 className="text-xs font-medium text-muted-foreground mb-2">
-            Active Keys
+            {t("pages.agentDetail.activeKeys", { defaultValue: "Active Keys" })}
           </h3>
           <div className="border border-border rounded-lg divide-y divide-border">
             {activeKeys.map((key: AgentKey) => (
@@ -3707,7 +3724,7 @@ export function KeysTab({ agentId, companyId }: { agentId: string; companyId?: s
                 <div>
                   <span className="text-sm font-medium">{key.name}</span>
                   <span className="text-xs text-muted-foreground ml-3">
-                    Created {formatDate(key.createdAt)}
+                    {t("pages.agentDetail.created", { defaultValue: "Created {{date}}", date: formatDate(key.createdAt) })}
                   </span>
                 </div>
                 <Button
@@ -3717,7 +3734,7 @@ export function KeysTab({ agentId, companyId }: { agentId: string; companyId?: s
                   onClick={() => revokeKey.mutate(key.id)}
                   disabled={revokeKey.isPending}
                 >
-                  Revoke
+                  {t("pages.agentDetail.revoke", { defaultValue: "Revoke" })}
                 </Button>
               </div>
             ))}
@@ -3729,7 +3746,7 @@ export function KeysTab({ agentId, companyId }: { agentId: string; companyId?: s
       {revokedKeys.length > 0 && (
         <div>
           <h3 className="text-xs font-medium text-muted-foreground mb-2">
-            Revoked Keys
+            {t("pages.agentDetail.revokedKeys", { defaultValue: "Revoked Keys" })}
           </h3>
           <div className="border border-border rounded-lg divide-y divide-border opacity-50">
             {revokedKeys.map((key: AgentKey) => (
@@ -3737,7 +3754,7 @@ export function KeysTab({ agentId, companyId }: { agentId: string; companyId?: s
                 <div>
                   <span className="text-sm line-through">{key.name}</span>
                   <span className="text-xs text-muted-foreground ml-3">
-                    Revoked {key.revokedAt ? formatDate(key.revokedAt) : ""}
+                    {t("pages.agentDetail.revoked", { defaultValue: "Revoked {{date}}", date: key.revokedAt ? formatDate(key.revokedAt) : "" })}
                   </span>
                 </div>
               </div>

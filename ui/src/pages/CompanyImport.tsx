@@ -72,6 +72,8 @@ import {
 } from "../lib/import-job-watch";
 import { Badge } from "@/components/ui/badge";
 import { describeError } from "@/api/errors";
+import { useTranslation } from "@/i18n";
+import { translateUiLiteral } from "@/i18n/LegacyLiteralLocalizer";
 
 // ── Import-specific helpers ───────────────────────────────────────────
 
@@ -920,6 +922,7 @@ async function watchImportJob(
 // ── Main page ─────────────────────────────────────────────────────────
 
 export function CompanyImport() {
+  const { t } = useTranslation();
   const {
     selectedCompanyId,
     selectedCompany,
@@ -1121,11 +1124,11 @@ export function CompanyImport() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: selectedCompany?.name ?? "Company", href: "/dashboard" },
-      { label: "Settings", href: "/company/settings" },
-      { label: "Import" },
+      { label: selectedCompany?.name ?? t("nav.company"), href: "/dashboard" },
+      { label: t("nav.settings"), href: "/company/settings" },
+      { label: translateUiLiteral("Import") },
     ]);
-  }, [selectedCompany?.name, setBreadcrumbs]);
+  }, [selectedCompany?.name, setBreadcrumbs, t]);
 
   // The GitHub/URL source still travels inline (it is just a URL, so it never
   // hits the inline-size ceiling). The local .zip source uploads its raw
@@ -2033,7 +2036,7 @@ export function CompanyImport() {
             >
               <div className="flex items-center gap-2">
                 <Icon className="h-4 w-4" />
-                {label}
+                {translateUiLiteral(label)}
               </div>
             </button>
           ))}
@@ -2055,7 +2058,7 @@ export function CompanyImport() {
                 onClick={() => packageInputRef.current?.click()}
                 disabled={importMutation.isPending}
               >
-                Choose zip
+                {translateUiLiteral("Choose zip")}
               </Button>
               {localPackage && (
                 <span className="text-xs text-muted-foreground">
@@ -2068,7 +2071,7 @@ export function CompanyImport() {
             </div>
             {!localPackage && (
               <p className="mt-2 text-xs text-muted-foreground">
-                {localZipHelpText}
+                {translateUiLiteral(localZipHelpText)}
               </p>
             )}
           </div>

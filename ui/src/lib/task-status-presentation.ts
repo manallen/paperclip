@@ -1,4 +1,6 @@
 import type { IssueBlockerAttention } from "@paperclipai/shared";
+import { translateUiLiteral } from "@/i18n/LegacyLiteralLocalizer";
+import { entityStatusLabel } from "./entity-labels";
 
 /**
  * Everything a task status surface needs to pick its glyph and label. Every
@@ -24,7 +26,7 @@ export interface TaskStatusPresentation {
 }
 
 export function taskStatusLabel(status: string): string {
-  return status.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+  return entityStatusLabel(status);
 }
 
 function blockedAttentionLabel(blockerAttention: IssueBlockerAttention | null | undefined) {
@@ -87,7 +89,7 @@ export function resolveTaskStatusPresentation(input: TaskStatusPresentationInput
   return {
     glyphStatus: isCoveredBlocked ? "in_queue" : visibleStatus,
     label: taskStatusLabel(visibleStatus),
-    ariaLabel: projectedStatus === "blocked" ? blockedAttentionLabel(blockerAttention) : taskStatusLabel(visibleStatus),
+    ariaLabel: projectedStatus === "blocked" ? translateUiLiteral(blockedAttentionLabel(blockerAttention)) : taskStatusLabel(visibleStatus),
   };
 }
 
