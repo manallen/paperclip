@@ -6,6 +6,7 @@ import { createRoot, type Root } from "react-dom/client";
 import type { HeartbeatRun } from "@paperclipai/shared";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RunActivityChart, SuccessRateChart } from "./ActivityCharts";
+import { setLocale } from "@/i18n";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 (globalThis as any).IS_REACT_ACT_ENVIRONMENT = true;
@@ -23,6 +24,7 @@ beforeEach(() => {
 
 afterEach(() => {
   flushSync(() => root.unmount());
+  setLocale("en");
   container.remove();
   vi.useRealTimers();
 });
@@ -88,6 +90,18 @@ function createRun(overrides: Partial<HeartbeatRun> = {}): HeartbeatRun {
 }
 
 describe("ActivityCharts", () => {
+  it("localizes run tooltips while preserving dates and provider error codes", () => {
+    setLocale("zh-CN");
+    render(<RunActivityChart runs={[
+      createRun({ status: "succeeded" }),
+      createRun({ id: "run-failed", status: "failed", errorCode: "provider_quota" }),
+    ]} />);
+    const tooltip = container.querySelector('[title^="2026-04-20"]')?.getAttribute("title");
+    expect(tooltip).toContain("2026-04-20：2 次运行");
+    expect(tooltip).toContain("成功：1");
+    expect(tooltip).toContain("失败：1");
+    expect(tooltip).toContain("provider_quota: 1");
+  });
   it("renders empty run charts when dashboard aggregate data is temporarily missing", () => {
     render(<RunActivityChart activity={undefined} />);
     expect(container.textContent).toContain("No runs yet");

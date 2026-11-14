@@ -19,6 +19,7 @@ import { useAgentChatEnabled } from "@/hooks/useAgentChatEnabled";
 import { useCombinedInboxTasksEnabled } from "@/hooks/useCombinedInboxTasksEnabled";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/i18n";
+import { translateUiLiteral } from "@/i18n/LegacyLiteralLocalizer";
 
 interface MobileBottomNavProps {
   visible: boolean;
@@ -126,7 +127,7 @@ export function MobileBottomNav({ visible }: MobileBottomNavProps) {
                 )}
               >
                 <Icon className="h-(--sz-18px) w-(--sz-18px)" />
-                <span className="truncate">{item.label}</span>
+                <span className="truncate">{translateUiLiteral(item.label)}</span>
               </button>
             );
           }
@@ -156,7 +157,7 @@ export function MobileBottomNav({ visible }: MobileBottomNavProps) {
                       </Badge>
                     )}
                   </span>
-                  <span className="truncate">{item.label}</span>
+                  <span className="truncate">{translateUiLiteral(item.label)}</span>
                 </>
               )}
             </NavLink>

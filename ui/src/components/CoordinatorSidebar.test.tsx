@@ -8,6 +8,7 @@ import { buildPinnedNavigationItems, CoordinatorSidebar } from "./CoordinatorSid
 import { TooltipProvider } from "./ui/tooltip";
 import { coordinatorAttentionQueryKey, coordinatorAttentionSummaryQueryKey } from "@/lib/coordinator-attention";
 import { queryKeys } from "@/lib/queryKeys";
+import { setLocale } from "@/i18n";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 const fixture = vi.hoisted(() => ({ attention: vi.fn(), summary: vi.fn(), openNewIssue: vi.fn(), pathname: "/COO/issues", collapsed: false, userId: "reviewer", chats: [] as Array<{ isUnreadForMe: boolean }>,
@@ -95,6 +96,17 @@ describe("Coordinator task creation", () => {
 });
 
 describe("Coordinator pinned pages", () => {
+  it("updates pinned page labels with the locale and preserves agent names", async () => {
+    fixture.agents = [{ id: "cto", companyId: "company", name: "Projects", urlKey: "cto" } as Agent];
+    localStorage.setItem("paperclip.coordinator.pinned-nav.v1:reviewer", JSON.stringify(["/projects", "agent-chat:company:cto"]));
+    await renderSidebar();
+    expect(container.querySelector('a[href="/projects"]')?.textContent).toBe("Projects");
+    await act(async () => setLocale("zh-CN"));
+    expect(container.querySelector('a[href="/projects"]')?.textContent).toBe("项目");
+    expect(container.querySelector('a[href="/chats/cto"]')?.textContent).toBe("Projects");
+    await act(async () => setLocale("en"));
+    expect(container.querySelector('a[href="/projects"]')?.textContent).toBe("Projects");
+  });
   it("matches pinned and recent agent avatar dimensions to task status icons", async () => {
     fixture.agents = [{ id: "cto", companyId: "company", name: "CTO", urlKey: "cto", role: "cto", status: "idle" } as Agent];
     const chat = { id: "chat-cto", conversationAgentId: "cto", updatedAt: "2026-11-11T12:00:00Z", isUnreadForMe: false };
@@ -256,7 +268,7 @@ describe("Coordinator pinned pages", () => {
     expect(pinnedPage("/agents/all")?.textContent).toBe("Agents");
   });
 });
-afterEach(async () => { await act(async () => root.unmount()); client.clear(); container.remove(); });
+afterEach(async () => { await act(async () => root.unmount()); setLocale("en"); client.clear(); container.remove(); });
 async function flush() { await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); }); }
 async function renderSidebar() {
   await act(async () => root.render(<QueryClientProvider client={client}><TooltipProvider><CoordinatorSidebar /></TooltipProvider></QueryClientProvider>));

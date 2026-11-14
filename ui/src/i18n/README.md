@@ -5,8 +5,9 @@ Paperclip uses two complementary localization paths:
 1. New and frequently edited UI should use keyed `i18next` messages from
    `locales/en.json` and `locales/zh-CN.json`.
 2. Existing literal-heavy screens are covered by `LegacyLiteralLocalizer` and
-   the source-to-Chinese catalog in `legacy-zh-CN.json`. This keeps the whole UI
-   localized while those screens migrate incrementally to keyed messages.
+   the source-to-Chinese catalogs in `legacy-zh-CN.json` and
+   `legacy-zh-CN.overrides.json`. This preserves existing component structure
+   while those screens migrate incrementally to keyed messages.
 
 The legacy localizer only replaces exact phrases discovered in source. It also
 supports numbered `{{value1}}` templates for dynamic labels. It deliberately
@@ -17,10 +18,17 @@ user-authored text is never translated.
 
 Run `node scripts/audit-ui-i18n.mjs` from the repository root to locate source
 literals (add `--json` for machine-readable output). Add normal product copy to the
-keyed locale files when practical. Otherwise add the English source phrase and
-its Chinese translation to `legacy-zh-CN.json`. Put deliberate terminology
-corrections in `legacy-zh-CN.overrides.json`; overrides win over generated or
-bulk-imported legacy entries.
+keyed locale files when practical. On the `zh-cn` maintenance branch, add literal
+translations and terminology corrections to `legacy-zh-CN.overrides.json`; keep
+the generated or bulk-imported `legacy-zh-CN.json` unchanged. Overrides win over
+base entries. Existing keyed Chinese messages belong in `locales/zh-CN.json`;
+update English only when adding a key.
+
+For templates containing grammatical interpolations such as `task`/`tasks`, add
+the resolved singular and plural phrases rather than preserving English grammar
+as a placeholder. The runtime matcher prefers templates with more fixed text;
+these variants can still appear as uncovered generic templates in the static
+audit. Preserve every placeholder in each resolved phrase.
 
 The build transform (`ui/vite-static-i18n.ts`) only wraps JSX text, the
 translatable JSX attributes, literals rendered directly in JSX expressions, and

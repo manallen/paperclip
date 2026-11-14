@@ -318,13 +318,13 @@ function formatRelative(value: Date | string | null | undefined): string {
   const diff = Date.now() - date.getTime();
   if (diff < 0) return date.toLocaleString();
   const seconds = Math.floor(diff / 1000);
-  if (seconds < 60) return `${seconds}s ago`;
+  if (seconds < 60) return translateUiLiteral(`${seconds}s ago`);
   const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
+  if (minutes < 60) return translateUiLiteral(`${minutes}m ago`);
   const hours = Math.floor(minutes / 60);
-  if (hours < 48) return `${hours}h ago`;
+  if (hours < 48) return translateUiLiteral(`${hours}h ago`);
   const days = Math.floor(hours / 24);
-  if (days < 30) return `${days}d ago`;
+  if (days < 30) return translateUiLiteral(`${days}d ago`);
   return date.toLocaleDateString();
 }
 
@@ -2129,11 +2129,11 @@ export function Secrets() {
     const updatedTooltip =
       row.kind === "company"
         ? [
-            `Updated: ${formatRelative(row.secret.updatedAt)}`,
-            `Value replaced: ${formatRelative(row.secret.lastRotatedAt)}`,
-            `Last used: ${formatRelative(row.secret.lastResolvedAt)}`,
+            translateUiLiteral(`Updated: ${formatRelative(row.secret.updatedAt)}`),
+            translateUiLiteral(`Value replaced: ${formatRelative(row.secret.lastRotatedAt)}`),
+            translateUiLiteral(`Last used: ${formatRelative(row.secret.lastResolvedAt)}`),
           ].join("\n")
-        : `Updated: ${formatRelative(row.definition.updatedAt)}`;
+        : translateUiLiteral(`Updated: ${formatRelative(row.definition.updatedAt)}`);
     return (
       <div
         key={row.id}
@@ -2899,7 +2899,7 @@ export function Secrets() {
               <div className="flex flex-col gap-1.5">
                 <p className="text-sm font-medium">Who provides the value</p>
                 <RadioCardGroup
-                  ariaLabel="Who provides the value"
+                  ariaLabel={translateUiLiteral("Who provides the value")}
                   className="grid-cols-1 sm:grid-cols-2"
                   disabled={createMutation.isPending}
                   value={secretValueProvider}
@@ -3146,7 +3146,7 @@ export function Secrets() {
                     onChange={setCreateAgentIds}
                     loading={agentsQuery.isPending}
                     disabled={createMutation.isPending}
-                    triggerLabel="Add agent"
+                    triggerLabel={translateUiLiteral("Add agent")}
                     triggerIcon={<Plus className="h-3.5 w-3.5" />}
                     triggerVariant="outline"
                     triggerSize="sm"

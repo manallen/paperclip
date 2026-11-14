@@ -5,6 +5,7 @@ import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ActiveAgentsPanel, AgentRunCard } from "./ActiveAgentsPanel";
+import { setLocale } from "@/i18n";
 
 const mockHeartbeatsApi = vi.hoisted(() => ({
   liveRunsForCompany: vi.fn(),
@@ -123,9 +124,25 @@ describe("ActiveAgentsPanel", () => {
   });
 
   afterEach(() => {
+    setLocale("en");
     container.remove();
     document.body.innerHTML = "";
     vi.clearAllMocks();
+  });
+
+  it("localizes the displayed run time while preserving the agent name and run URL", async () => {
+    setLocale("zh-CN");
+    const root = createRoot(container);
+    const run = { ...createRun(1), agentName: "Started just now", startedAt: new Date().toISOString() };
+    try {
+      await act(async () => root.render(<AgentRunCard companyId="company-1" run={run} />));
+      expect(container.querySelector("time")?.textContent).toBe("已开始 刚刚");
+      const link = container.querySelector(`a[href="/agents/${run.agentId}/runs/${run.id}"]`);
+      expect(link?.textContent).toContain("Started just now");
+      expect(link?.getAttribute("title")).toContain("已开始 刚刚");
+    } finally {
+      await act(async () => root.unmount());
+    }
   });
 
   it("links hidden active/recent runs to the full live dashboard", async () => {

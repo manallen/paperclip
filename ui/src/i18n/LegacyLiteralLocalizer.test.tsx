@@ -29,6 +29,17 @@ describe("static UI literal localization", () => {
     expect(translateUiLiteral("Delete")).toBe("Delete");
   });
 
+  it("prefers specific product templates over broad templates and preserves interpolated names", () => {
+    expect(translateLegacyLiteral("Name for OPENAI_API_KEY")).toBe("OPENAI_API_KEY 的名称");
+    expect(translateLegacyLiteral("2 imported agents are paused and will not run.")).toBe("2 个导入的智能体已暂停，不会运行。");
+    expect(translateLegacyLiteral("2 more active/recent runs")).toBe("还有 2 次正在进行或近期的运行");
+    expect(translateLegacyLiteral("Open image: A user's image")).toBe("打开图片：A user's image");
+    expect(translateLegacyLiteral("Open task: A user's task")).toBe("打开任务：A user's task");
+    expect(translateLegacyLiteral("Open Plan draft in the sidebar")).toBe("在侧边栏打开 Plan draft");
+    expect(translateLegacyLiteral("(1 sub-task)")).toBe("（1 个子任务）");
+    expect(translateLegacyLiteral("(2 sub-tasks)")).toBe("（2 个子任务）");
+  });
+
   it("uses product context for ambiguous UI terms", async () => {
     await setLocale("zh-CN");
     expect(translateUiLiteral("Disabled")).toBe("未启用");

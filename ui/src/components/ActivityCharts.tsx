@@ -29,15 +29,15 @@ const runSegmentColors = {
 
 // Compact per-day tooltip that also attributes failures to their error class.
 function runDayTooltip(entry: DashboardRunActivityDay): string {
-  const lines = [`${entry.date}: ${entry.total} run${entry.total === 1 ? "" : "s"}`];
-  if (entry.succeeded > 0) lines.push(`  succeeded: ${entry.succeeded}`);
-  if (entry.recovered > 0) lines.push(`  recovered: ${entry.recovered} (retry succeeded)`);
+  const lines = [translateUiLiteral(`${entry.date}: ${entry.total} run${entry.total === 1 ? "" : "s"}`)];
+  if (entry.succeeded > 0) lines.push(`  ${translateUiLiteral(`succeeded: ${entry.succeeded}`)}`);
+  if (entry.recovered > 0) lines.push(`  ${translateUiLiteral(`recovered: ${entry.recovered} (retry succeeded)`)}`);
   if (entry.failed > 0) {
-    lines.push(`  failed: ${entry.failed}`);
+    lines.push(`  ${translateUiLiteral(`failed: ${entry.failed}`)}`);
     const codes = Object.entries(entry.failedByErrorCode ?? {}).sort((a, b) => b[1] - a[1]);
     for (const [code, count] of codes) lines.push(`    ${code}: ${count}`);
   }
-  if (entry.other > 0) lines.push(`  other: ${entry.other}`);
+  if (entry.other > 0) lines.push(`  ${translateUiLiteral(`other: ${entry.other}`)}`);
   return lines.join("\n");
 }
 
@@ -63,7 +63,7 @@ function ChartLegend({ items }: { items: { color: string; label: string }[] }) {
       {items.map(item => (
         <span key={item.label} className="flex items-center gap-1 text-(length:--text-nano) text-muted-foreground">
           <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
-          {item.label}
+          {translateUiLiteral(item.label)}
         </span>
       ))}
     </div>

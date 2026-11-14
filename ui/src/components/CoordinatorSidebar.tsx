@@ -29,6 +29,8 @@ import { AgentAvatar } from "./AgentAvatar";
 import { agentChatPinKey } from "./AgentChatPin";
 import { PinnedNavigationList, type PinnedNavigationItem } from "./PinnedNavigationList";
 import { companyProjectsQuery } from "@/lib/company-projects-query";
+import { translateUiLiteral } from "@/i18n/LegacyLiteralLocalizer";
+import { useTranslation } from "@/i18n";
 
 const NO_RECENT_TASKS: never[] = [];
 
@@ -47,7 +49,7 @@ const moreDestinations = [
 
 export function buildPinnedNavigationItems(pins: readonly string[], agents: readonly Agent[], destinations: readonly { to: string; label: string; icon: LucideIcon }[]): PinnedNavigationItem[] {
   const keys = new Set(pins);
-  const items = new Map<string, PinnedNavigationItem>(destinations.map(item => [item.to, { key: item.to, to: item.to, label: item.label, icon: <item.icon className="size-4" /> }]));
+  const items = new Map<string, PinnedNavigationItem>(destinations.map(item => [item.to, { key: item.to, to: item.to, label: translateUiLiteral(item.label), icon: <item.icon className="size-4" /> }]));
   for (const agent of agents) {
     const key = agentChatPinKey(agent.companyId, agent.id);
     if (keys.has(key)) items.set(key, { key, to: `/chats/${encodeURIComponent(agentRouteRef(agent))}`, label: agent.name, icon: <AgentAvatar agent={agent} size={16} /> });
@@ -107,6 +109,7 @@ function RecentNavigationList({ children }: { children: ReactNode }) {
 /** The navigation is a view of the existing records; it never creates a chat
  * or task just because someone visits or switches agents. */
 export function CoordinatorSidebar({ children }: { children?: ReactNode }) {
+  const { t } = useTranslation();
   const { companyId, userId, agents, chats, session } = useAgentChatNavigation();
   const unreadChatCount = chats.data?.filter(chat => chat.isUnreadForMe).length ?? 0;
   const pinnedNavigation = usePinnedNavigation(userId);
@@ -119,7 +122,7 @@ export function CoordinatorSidebar({ children }: { children?: ReactNode }) {
     : moreDestinations, [experimental?.enableCases]);
   const [moreOpen, setMoreOpen] = useState(false);
   const moreContentRef = useRef<HTMLDivElement>(null);
-  const orderedPins = useMemo(() => buildPinnedNavigationItems(pinnedNavigation.pins, agents.data ?? [], destinations), [pinnedNavigation.pins, agents.data, destinations]);
+  const orderedPins = useMemo(() => buildPinnedNavigationItems(pinnedNavigation.pins, agents.data ?? [], destinations), [pinnedNavigation.pins, agents.data, destinations, t]);
   const { entries: recentTasks } = useRecentTasks({ companyId, userId });
   const { collapsed, peeking, isMobile, setSidebarOpen } = useSidebar();
   const rail = collapsed && !peeking;
@@ -182,7 +185,7 @@ export function CoordinatorSidebar({ children }: { children?: ReactNode }) {
                 {index === 6 || index === 10 ? <div role="separator" className="my-1 border-t border-border" /> : null}
                 <div className="group/coordinator-more relative flex items-center rounded-sm transition-colors hover:bg-accent">
                   <Link to={to} onClick={() => { setMoreOpen(false); if (isMobile) setSidebarOpen(false); }} className="flex min-w-0 flex-1 items-center gap-2 rounded-sm px-2 py-1.5 pr-10 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                    <Icon className="size-4 shrink-0 text-muted-foreground" />{label}
+                    <Icon className="size-4 shrink-0 text-muted-foreground" />{translateUiLiteral(label)}
                   </Link>
                   <button type="button" aria-label={`${pinned ? "Unpin" : "Pin"} ${label}`} aria-pressed={pinned} title={`${pinned ? "Unpin" : "Pin"} ${label}`} disabled={!pinnedNavigation.canPin} onClick={() => pinnedNavigation.toggle(to)} className={cn("absolute right-0.5 top-1/2 flex size-8 -translate-y-1/2 items-center justify-center rounded-sm opacity-0 transition-opacity outline-none group-hover/coordinator-more:opacity-100 focus-visible:opacity-100 pointer-coarse:opacity-100 hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring", pinned ? "text-foreground" : "text-muted-foreground")}>
                     <PinIcon className="size-3.5" />

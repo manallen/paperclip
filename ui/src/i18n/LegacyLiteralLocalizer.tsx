@@ -10,6 +10,7 @@ type LegacyTranslations = Record<string, string>;
 type TemplateTranslation = {
   expression: RegExp;
   translation: string;
+  literalLength: number;
 };
 
 function collectKeyedTranslations(
@@ -87,10 +88,15 @@ for (const [source, translation] of Object.entries(translations)) {
     cursor = (match.index ?? 0) + match[0].length;
   }
   pattern += `${escapeRegExp(normalizedSource.slice(cursor))}$`;
-  templateTranslations.push({ expression: new RegExp(pattern), translation });
+  templateTranslations.push({
+    expression: new RegExp(pattern),
+    translation,
+    literalLength: normalizedSource.replace(/{{value\d+}}/g, "").length,
+  });
 }
 
-templateTranslations.sort((left, right) => right.expression.source.length - left.expression.source.length);
+// Prefer specific copy; extra captures must not make a broad template win.
+templateTranslations.sort((left, right) => right.literalLength - left.literalLength || right.expression.source.length - left.expression.source.length);
 
 export function translateLegacyLiteral(value: string) {
   const normalizedValue = normalize(value);
