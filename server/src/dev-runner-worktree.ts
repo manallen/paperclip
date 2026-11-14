@@ -154,3 +154,25 @@ export function bootstrapDevRunnerWorktreeEnv(
     missingEnv: false,
   };
 }
+
+export function bootstrapDevRunnerRootEnv(
+  rootDir: string,
+  env: NodeJS.ProcessEnv = process.env,
+): string | null {
+  if (env.PAPERCLIP_DISABLE_CWD_ENV_FILE === "true") {
+    return null;
+  }
+
+  const envPath = path.resolve(rootDir, ".env");
+  if (!existsSync(envPath)) {
+    return null;
+  }
+
+  const entries = parseEnvFile(readFileSync(envPath, "utf8"));
+  for (const [key, value] of Object.entries(entries)) {
+    if (typeof env[key] === "string" && env[key]!.trim().length > 0) continue;
+    env[key] = value;
+  }
+
+  return envPath;
+}

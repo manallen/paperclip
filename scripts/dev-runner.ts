@@ -14,7 +14,11 @@ import {
 import { applyDevRunnerOptions } from "./dev-runner-options.ts";
 import { collectWatchedSnapshot as collectDevServerWatchedSnapshot, diffSnapshots } from "./dev-runner-snapshot.mjs";
 import { createDevServiceIdentity, repoRoot } from "./dev-service-profile.ts";
-import { bootstrapDevRunnerWorktreeEnv, isWorktreeSeedPending } from "../server/src/dev-runner-worktree.ts";
+import {
+  bootstrapDevRunnerRootEnv,
+  bootstrapDevRunnerWorktreeEnv,
+  isWorktreeSeedPending,
+} from "../server/src/dev-runner-worktree.ts";
 import {
   readDevServerRestartRequest,
   removeDevServerRestartRequest,
@@ -56,6 +60,7 @@ if (isWorktreeSeedPending(repoRoot)) {
   );
   process.exit(1);
 }
+bootstrapDevRunnerRootEnv(repoRoot, process.env);
 
 const scanIntervalMs = 1500;
 const autoRestartPollIntervalMs = 2500;

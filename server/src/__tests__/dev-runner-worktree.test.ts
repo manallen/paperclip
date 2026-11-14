@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
 import {
+  bootstrapDevRunnerRootEnv,
   bootstrapDevRunnerWorktreeEnv,
   applyEmptyWorktreeSigningSecrets,
   isWorktreeSeedPending,
@@ -162,5 +163,39 @@ describe("dev-runner worktree env bootstrap", () => {
       envPath: resolveWorktreeEnvFilePath(root),
       missingEnv: true,
     });
+  });
+
+  it("loads repo root .env without overriding existing env values", () => {
+    const root = createTempRoot("paperclip-dev-runner-root-env-");
+    fs.writeFileSync(
+      path.join(root, ".env"),
+      [
+        "PORT=3333",
+        "DATABASE_URL=postgres://user:pass@192.168.1.79:5432/paperclip",
+        "",
+      ].join("\n"),
+      "utf8",
+    );
+
+    const env: NodeJS.ProcessEnv = {
+      PORT: "4100",
+    };
+    const loadedPath = bootstrapDevRunnerRootEnv(root, env);
+
+    expect(loadedPath).toBe(path.join(root, ".env"));
+    expect(env.PORT).toBe("4100");
+    expect(env.DATABASE_URL).toBe("postgres://user:pass@192.168.1.79:5432/paperclip");
+  });
+
+  it("skips repo root .env when PAPERCLIP_DISABLE_CWD_ENV_FILE is true or file is absent", () => {
+    const root = createTempRoot("paperclip-dev-runner-root-env-disabled-");
+    expect(bootstrapDevRunnerRootEnv(root, {})).toBeNull();
+
+    fs.writeFileSync(path.join(root, ".env"), "PORT=3333\n", "utf8");
+    const env: NodeJS.ProcessEnv = {
+      PAPERCLIP_DISABLE_CWD_ENV_FILE: "true",
+    };
+    expect(bootstrapDevRunnerRootEnv(root, env)).toBeNull();
+    expect(env.PORT).toBeUndefined();
   });
 });
